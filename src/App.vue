@@ -1,5 +1,8 @@
 <template>
-  <router-view />
+  <div class="app-container bg-dark text-white">
+    <RouterView />
+  </div>
+  <!--  <router-view />-->
 </template>
 
 <script setup>
@@ -34,7 +37,8 @@ body {
     'Segoe UI',
     Roboto,
     sans-serif;
-  background-color: #f8f9fa;
+  background-color: #ffffff;
+  color: #1a1a1a;
 }
 
 .cursor-pointer {

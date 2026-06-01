@@ -1,15 +1,18 @@
 <template>
   <MainLayout>
     <div class="payslip-container" v-if="record">
-
       <div class="page-header">
         <div>
           <h1 class="page-title"><i class="fas fa-file-invoice me-2 text-gradient"></i>Payslip</h1>
           <p class="page-sub">{{ record.first_name }} {{ record.last_name }} · {{ monthLabel }}</p>
         </div>
         <div class="header-actions">
-          <button class="btn-outline" @click="$router.back()"><i class="fas fa-arrow-left"></i> Back</button>
-          <button class="btn-primary" @click="printPayslip"><i class="fas fa-print"></i> Print</button>
+          <button class="btn-outline" @click="$router.back()">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+          <button class="btn-primary" @click="printPayslip">
+            <i class="fas fa-print"></i> Print
+          </button>
         </div>
       </div>
 
@@ -65,9 +68,7 @@
 
         <div class="pay-columns">
           <div class="pay-col">
-            <div class="col-title earnings-title">
-              <i class="fas fa-arrow-up"></i> Earnings
-            </div>
+            <div class="col-title earnings-title"><i class="fas fa-arrow-up"></i> Earnings</div>
             <div class="pay-row-item" v-for="e in earnings" :key="e.label">
               <span class="item-label">{{ e.label }}</span>
               <span class="item-amount green">${{ formatNum(e.amount) }}</span>
@@ -97,20 +98,23 @@
           <div class="net-label">NET PAY</div>
           <div class="net-amount">${{ formatNum(record.net_salary) }}</div>
           <div class="net-status">
-            <span class="status-pill" :class="'s-' + (record.status || '').toLowerCase()">{{ record.status }}</span>
+            <span class="status-pill" :class="'s-' + (record.status || '').toLowerCase()">{{
+              record.status
+            }}</span>
             <span class="paid-on" v-if="record.status === 'Paid'">Processed via Bank Network</span>
           </div>
         </div>
 
         <div class="doc-footer-note">
           <i class="fas fa-info-circle"></i>
-          This payslip is system-generated and does not require a signature. For any queries, contact the HR department.
+          This payslip is system-generated and does not require a signature. For any queries,
+          contact the HR department.
         </div>
       </div>
     </div>
 
-    <div v-else class="dark-card not-found">
-      <i class="fas fa-file-times fa-3x"></i>
+    <div v-else class="light-card not-found">
+      <i class="fas fa-file-excel fa-3x"></i>
       <p>Payslip record not found</p>
       <button class="btn-outline" @click="$router.back()">Go Back</button>
     </div>
@@ -127,29 +131,41 @@ const route = useRoute()
 const payrollStore = usePayrollStore()
 const record = ref(null)
 
-//គណនាឈ្មោះខែ Dynamic ផ្អែកលើ Column `month` និង `year` ពី Database
 const monthLabel = computed(() => {
   if (!record.value) return ''
-  return new Date(Number(record.value.year), Number(record.value.month) - 1).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+  return new Date(Number(record.value.year), Number(record.value.month) - 1).toLocaleDateString(
+    'en-US',
+    { year: 'numeric', month: 'long' },
+  )
 })
 
-const earnings = computed(() => record.value ? [
-  { label: 'Basic Salary', amount: record.value.basic_salary },
-  { label: 'Housing Allowance', amount: Math.round((record.value.allowances || 0) * 0.5) },
-  { label: 'Transport Allowance', amount: Math.round((record.value.allowances || 0) * 0.3) },
-  { label: 'Other Allowances', amount: Math.round((record.value.allowances || 0) * 0.2) },
-  { label: 'Overtime Pay', amount: record.value.overtime_pay || 0 },
-] : [])
+const earnings = computed(() =>
+  record.value
+    ? [
+        { label: 'Basic Salary', amount: record.value.basic_salary },
+        { label: 'Housing Allowance', amount: Math.round((record.value.allowances || 0) * 0.5) },
+        { label: 'Transport Allowance', amount: Math.round((record.value.allowances || 0) * 0.3) },
+        { label: 'Other Allowances', amount: Math.round((record.value.allowances || 0) * 0.2) },
+        { label: 'Overtime Pay', amount: record.value.overtime_pay || 0 },
+      ]
+    : [],
+)
 
-const deductions = computed(() => record.value ? [
-  { label: 'Income Tax', amount: Math.round((record.value.deductions || 0) * 0.5) },        /* កាត់ពន្ធ 50% */
-  { label: 'Health Insurance', amount: Math.round((record.value.deductions || 0) * 0.3) }, /* ធានារ៉ាប់រង 30% */
-  { label: 'Social Security', amount: Math.round((record.value.deductions || 0) * 0.2) },  /* មូលនិធិសង្គម 20% */
-] : [])
+const deductions = computed(() =>
+  record.value
+    ? [
+        { label: 'Income Tax', amount: Math.round((record.value.deductions || 0) * 0.5) },
+        { label: 'Health Insurance', amount: Math.round((record.value.deductions || 0) * 0.3) },
+        { label: 'Social Security', amount: Math.round((record.value.deductions || 0) * 0.2) },
+      ]
+    : [],
+)
 
 const totalDeductions = computed(() => {
   if (!record.value) return 0
-  return parseFloat(record.value.tax_deduction || 0) + parseFloat(record.value.insurance_deduction || 0)
+  return (
+    parseFloat(record.value.tax_deduction || 0) + parseFloat(record.value.insurance_deduction || 0)
+  )
 })
 
 const formatNum = (n) => new Intl.NumberFormat().format(Math.round(n || 0))
@@ -157,7 +173,9 @@ const formatNum = (n) => new Intl.NumberFormat().format(Math.round(n || 0))
 const printPayslip = () => {
   const el = document.getElementById('payslip-print')
   const w = window.open('', '_blank')
-  w.document.write(`<html><head><title>Payslip - HRM</title><style>body{font-family:sans-serif;padding:2rem;color:#1e293b;background:#fff;} .payslip-doc{max-width:800px;margin:0 auto;} .company-info { display: flex; gap: 15px; } .doc-header { display: flex; justify-content: space-between; } .doc-divider { border-bottom: 2px solid #e2e8f0; margin: 20px 0; } .emp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; } .pay-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; } .col-title { font-weight: bold; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px solid #cbd5e1; } .pay-row-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; } .col-total { display: flex; justify-content: space-between; font-weight: bold; margin-top: 15px; padding-top: 10px; border-top: 1px dashed #cbd5e1; } .net-pay-banner { background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 10px; text-align: center; margin-top: 30px; } .net-amount { font-size: 28px; font-weight: 800; color: #6823ff; margin: 5px 0; } .doc-footer-note { font-size: 12px; color: #64748b; margin-top: 30px; text-align: center; }</style></head><body><div class="payslip-doc">${el.innerHTML}</div></body></html>`)
+  w.document.write(
+    `<html><head><title>Payslip - HRM</title><style>body{font-family:sans-serif;padding:2rem;color:#0f172a;background:#fff;} .payslip-doc{max-width:800px;margin:0 auto;border:1px solid #e2e8f0;padding:2.5rem;border-radius:16px;} .company-info { display: flex; gap: 15px; align-items: center; } .doc-header { display: flex; justify-content: space-between; align-items: flex-start; } .company-name { font-weight: 800; font-size: 1.1rem; color: #0f172a; } .company-address { color: #64748b; font-size: 12px; } .payslip-label { font-size: 1.4rem; font-weight: 900; letter-spacing: 2px; color: #6823ff; } .payslip-month { color: #334155; font-size: 14px; margin-top: 4px; } .payslip-id { font-size: 12px; color: #94a3b8; font-family: monospace; } .doc-divider { border-bottom: 1px solid #e2e8f0; margin: 24px 0; } .emp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; } .field-label { font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight:600; } .field-value { font-size: 14px; color: #1e293b; font-weight: 700; margin-top:2px; } .pay-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin: 24px 0; } .col-title { font-weight: 800; font-size: 12px; text-transform: uppercase; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid #f1f5f9; display: flex; align-items: center; gap: 6px; } .earnings-title { color: #16a34a; } .deductions-title { color: #dc2626; } .pay-row-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; color: #475569; } .item-amount { font-family: monospace; font-weight: 600; } .item-amount.green { color: #16a34a; } .item-amount.red { color: #dc2626; } .col-total { display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; color: #0f172a; margin-top: 16px; padding-top: 12px; border-top: 1px dashed #cbd5e1; } .total-val { font-family: monospace; } .total-val.green { color: #16a34a; } .total-val.red { color: #dc2626; } .net-pay-banner { background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-top: 24px; } .net-label { font-size: 12px; font-weight: 800; color: #64748b; } .net-amount { font-size: 28px; font-weight: 900; color: #6823ff; font-family: monospace; } .net-status { text-align: right; } .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; } .s-paid { background: #dcfce7; color: #16a34a; } .s-pending { background: #fef3c7; color: #d97706; } .paid-on { font-size: 11px; color: #94a3b8; display: block; margin-top: 4px; } .doc-footer-note { font-size: 12px; color: #94a3b8; margin-top: 24px; text-align: center; border-top: 1px dashed #e2e8f0; padding-top: 16px; }</style></head><body><div class="payslip-doc">${el.innerHTML}</div></body></html>`,
+  )
   w.document.close()
   setTimeout(() => {
     w.print()
@@ -165,84 +183,365 @@ const printPayslip = () => {
 }
 
 onMounted(async () => {
-  //បាញ់ទៅទាញទិន្នន័យប្រាក់ខែរួមសិន រួចដេញរកមើល ID ឱ្យត្រូវនឹង URL params
   await payrollStore.fetchAllPayrolls()
-  record.value = payrollStore.payrolls.find(r => r.id === Number(route.params.id)) || null
+  record.value = payrollStore.payrolls.find((r) => r.id === Number(route.params.id)) || null
 })
 </script>
 
 <style scoped>
-.payslip-container { padding: 1.5rem; max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem; }
-.page-header { display: flex; justify-content: space-between; align-items: flex-start; }
-.page-title { font-size: 1.6rem; font-weight: 700; color: rgba(255,255,255,0.92); margin: 0 0 0.3rem; }
-.page-sub { font-size: 0.83rem; color: rgba(255,255,255,0.35); margin: 0; }
-.text-gradient { background: linear-gradient(135deg, #a47bff, #40c8da); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.header-actions { display: flex; gap: 0.75rem; }
-.btn-primary { display: inline-flex; align-items: center; gap: 7px; padding: 0.6rem 1.2rem; background: linear-gradient(135deg, #6823ff, #4f0fdb); border: none; border-radius: 10px; color: white; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 20px rgba(104,35,255,0.35); }
-.btn-primary:hover { opacity: 0.9; }
-.btn-outline { display: inline-flex; align-items: center; gap: 7px; padding: 0.55rem 1.1rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 9px; color: rgba(255,255,255,0.6); font-size: 0.83rem; cursor: pointer; transition: all 0.2s; }
-.btn-outline:hover { background: rgba(255,255,255,0.1); }
-
-.payslip-doc { background: #0d0d1a; border: 1px solid rgba(104,35,255,0.2); border-radius: 20px; padding: 2.5rem; }
-
-/* Doc Header */
-.doc-header { display: flex; justify-content: space-between; align-items: flex-start; }
-.company-info { display: flex; align-items: center; gap: 1rem; }
-.company-logo { width: 50px; height: 50px; background: linear-gradient(135deg, #6823ff, #13707f); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: white; flex-shrink: 0; }
-.company-name { font-size: 1.05rem; font-weight: 800; color: rgba(255,255,255,0.9); margin-bottom: 3px; }
-.company-address { font-size: 0.72rem; color: rgba(255,255,255,0.35); margin-bottom: 1px; }
-.payslip-title-block { text-align: right; }
-.payslip-label { font-size: 1.3rem; font-weight: 900; letter-spacing: 3px; background: linear-gradient(135deg, #a47bff, #40c8da); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.payslip-month { font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 3px; }
-.payslip-id { font-size: 0.72rem; color: rgba(255,255,255,0.3); font-family: monospace; margin-top: 2px; }
-
-.doc-divider { height: 1px; background: linear-gradient(90deg, rgba(104,35,255,0.4), transparent); margin: 1.5rem 0; }
-
-/* Employee section */
-.employee-section { margin-bottom: 1.5rem; }
-.emp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-.emp-field {}
-.field-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,0.3); margin-bottom: 3px; }
-.field-value { font-size: 0.85rem; font-weight: 600; color: rgba(255,255,255,0.82); }
-
-/* Pay columns */
-.pay-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
-.pay-col {}
-.col-title { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 0.6rem 0; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 7px; border-bottom: 1px solid rgba(255,255,255,0.06); }
-.earnings-title { color: #34d399; }
-.deductions-title { color: #f87171; }
-.col-title i { font-size: 0.7rem; }
-.pay-row-item { display: flex; justify-content: space-between; align-items: center; padding: 0.45rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
-.item-label { font-size: 0.8rem; color: rgba(255,255,255,0.55); }
-.item-amount { font-size: 0.82rem; font-weight: 600; font-family: 'Courier New', monospace; }
-.item-amount.green { color: #34d399; }
-.item-amount.red { color: #f87171; }
-.col-total { display: flex; justify-content: space-between; align-items: center; padding: 0.7rem 0 0; margin-top: 0.25rem; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.82rem; font-weight: 700; color: rgba(255,255,255,0.7); }
-.total-val { font-size: 0.95rem; font-family: 'Courier New', monospace; }
-.total-val.green { color: #34d399; }
-.total-val.red { color: #f87171; }
-
-/* Net pay banner */
-.net-pay-banner {
-  background: linear-gradient(135deg, rgba(104,35,255,0.15), rgba(64,200,218,0.08));
-  border: 1px solid rgba(104,35,255,0.3);
-  border-radius: 14px; padding: 1.5rem 2rem;
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 1.5rem;
+/* Main Canvas Layer */
+.payslip-container {
+  padding: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
-.net-label { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.4); }
-.net-amount { font-size: 2.2rem; font-weight: 900; background: linear-gradient(135deg, #a47bff, #40c8da); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-family: 'Courier New', monospace; }
-.net-status { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
-.status-pill { padding: 4px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; text-transform: capitalize; }
-.s-paid { background: rgba(52,211,153,0.15); color: #34d399; }
-.s-pending { background: rgba(251,191,36,0.15); color: #fbbf24; }
-.paid-on { font-size: 0.72rem; color: rgba(255,255,255,0.35); }
 
-.doc-footer-note { font-size: 0.72rem; color: rgba(255,255,255,0.25); display: flex; align-items: flex-start; gap: 7px; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06); }
-.doc-footer-note i { flex-shrink: 0; margin-top: 1px; }
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.25rem 0;
+}
+.page-sub {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0;
+}
+.text-gradient {
+  background: linear-gradient(135deg, #6823ff, #0284c7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
 
-.dark-card { background: #0d0d1a; border: 1px solid rgba(104,35,255,0.13); border-radius: 18px; padding: 1.5rem; }
-.not-found { text-align: center; padding: 3rem; color: rgba(255,255,255,0.3); display: flex; flex-direction: column; align-items: center; gap: 1rem; max-width: 400px; margin: 2rem auto; }
-.not-found i { opacity: 0.3; }
-.me-2 { margin-right: 0.5rem; }
+/* Global System Triggers */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.65rem 1.25rem;
+  background: linear-gradient(135deg, #6823ff, #4f0fdb);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(104, 35, 255, 0.25);
+}
+.btn-primary:hover {
+  box-shadow: 0 6px 18px rgba(104, 35, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.6rem 1.2rem;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  color: #334155;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.btn-outline:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+/* Clean Sheet Document Wrapper */
+.payslip-doc {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow:
+    0 4px 6px -1px rgba(15, 23, 42, 0.02),
+    0 2px 4px -1px rgba(15, 23, 42, 0.01);
+}
+
+/* Doc Header Layout */
+.doc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.company-info {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+.company-logo {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #6823ff, #4f0fdb);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: white;
+  flex-shrink: 0;
+}
+.company-name {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 2px;
+}
+.company-address {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.payslip-title-block {
+  text-align: right;
+}
+.payslip-label {
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #6823ff;
+}
+.payslip-month {
+  font-size: 0.875rem;
+  color: #334155;
+  font-weight: 600;
+  margin-top: 3px;
+}
+.payslip-id {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-family: monospace;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.doc-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 1.75rem 0;
+}
+
+/* Profile Parameters Section */
+.employee-section {
+  margin-bottom: 1.75rem;
+  background: #f8fafc;
+  padding: 1.25rem;
+  border-radius: 12px;
+  border: 1px solid #f1f5f9;
+}
+.emp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+}
+.field-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.field-value {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* Balance Transaction Columns */
+.pay-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 1.75rem;
+}
+.col-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 2px solid #f1f5f9;
+}
+.earnings-title {
+  color: #16a34a;
+}
+.deductions-title {
+  color: #dc2626;
+}
+.col-title i {
+  font-size: 0.75rem;
+}
+
+.pay-row-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f8fafc;
+}
+.item-label {
+  font-size: 0.85rem;
+  color: #475569;
+  font-weight: 500;
+}
+.item-amount {
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+}
+.item-amount.green {
+  color: #16a34a;
+}
+.item-amount.red {
+  color: #dc2626;
+}
+
+.col-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.85rem;
+  margin-top: 0.5rem;
+  border-top: 1px dashed #cbd5e1;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+.total-val {
+  font-size: 1rem;
+  font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+}
+.total-val.green {
+  color: #16a34a;
+}
+.total-val.red {
+  color: #dc2626;
+}
+
+/* Financial Yield High-Contrast Banner */
+.net-pay-banner {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+}
+.net-label {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #475569;
+}
+.net-amount {
+  font-size: 2.25rem;
+  font-weight: 900;
+  color: #6823ff;
+  font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+}
+.net-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.status-pill {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.s-paid {
+  background: #dcfce7;
+  color: #16a34a;
+}
+.s-pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+.paid-on {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Disclaimers & Errors */
+.doc-footer-note {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding-top: 1.25rem;
+  border-top: 1px solid #e2e8f0;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.doc-footer-note i {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #cbd5e1;
+}
+
+.light-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+.not-found {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  max-width: 400px;
+  margin: 4rem auto;
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.02);
+}
+.not-found i {
+  color: #cbd5e1;
+}
+.me-2 {
+  margin-right: 0.5rem;
+}
 </style>

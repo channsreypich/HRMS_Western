@@ -11,22 +11,22 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import Sidebar from './Sidebar.vue';
-import Navbar from './Navbar.vue';
+import { ref } from 'vue'
+import Sidebar from './Sidebar.vue'
+import Navbar from './Navbar.vue'
 
-const sidebarCollapsed = ref(false);
+const sidebarCollapsed = ref(false)
 
 const toggleSidebar = () => {
-  sidebarCollapsed.value = !sidebarCollapsed.value;
-};
+  sidebarCollapsed.value = !sidebarCollapsed.value
+}
 </script>
 
 <style scoped>
 .app-layout {
   display: flex;
   min-height: 100vh;
-  background: #070711;
+  background: #ffffff;
 }
 
 .main-content {
@@ -45,16 +45,27 @@ const toggleSidebar = () => {
 .page-content {
   flex: 1;
   padding: 2rem;
+  color: #1a1a1a;
   animation: pageIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes pageIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 768px) {
-  .main-content { margin-left: 0; }
-  .page-content { padding: 1rem; }
+  .main-content {
+    margin-left: 0;
+  }
+  .page-content {
+    padding: 1rem;
+  }
 }
 </style>

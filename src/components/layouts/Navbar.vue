@@ -29,32 +29,35 @@ const currentPage = computed(() => {
 
 <style scoped>
 .navbar {
-  position: sticky; top: 0; z-index: 100;
+  position: sticky;
+  top: 0;
+  z-index: 100;
   height: 60px;
-  background: rgba(10, 10, 20, 0.85);
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(104, 35, 255, 0.15);
+  background: #ffffff;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(104, 35, 255, 0.1);
 }
 
 .navbar-container {
-  height: 100%; 
-  padding: 0 2rem; 
-  display: flex; 
+  height: 100%;
+  padding: 0 2rem;
+  display: flex;
   align-items: center;
 }
 
-.navbar-left { 
-  display: flex; 
-  align-items: center; 
+.navbar-left {
+  display: flex;
+  align-items: center;
 }
 
 .page-title {
   margin: 0;
-  font-size: 1.2rem; 
+  font-size: 1.2rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #a47bff, #40c8da);
-  -webkit-background-clip: text; 
-  -webkit-text-fill-color: transparent; 
+  background: linear-gradient(135deg, #531cbd, #11606d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: 0.5px;
 }
