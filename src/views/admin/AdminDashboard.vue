@@ -1,7 +1,6 @@
 <template>
   <MainLayout>
     <div class="dashboard-container">
-
       <div class="light-card header-section fade-in">
         <h1 class="page-title">
           <i class="fas fa-crown me-2" style="color: #6823ff"></i>
@@ -53,17 +52,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import api from '@/services/api'
 import MainLayout from '@/components/layouts/MainLayout.vue'
 
 const hrCount = ref(0)
 
 const fetchHRStatistics = async () => {
   try {
-    const token = localStorage.getItem('token')
-    const res = await axios.get('http://localhost:8001/api/auth/users-list', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const res = await api.get('/api/auth/users-list')
     if (res.data.success) {
       const totalHR = res.data.data.filter((user) => user.role === 'HR')
       hrCount.value = totalHR.length

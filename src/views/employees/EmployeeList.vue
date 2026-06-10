@@ -99,9 +99,7 @@
           <table class="light-table">
             <thead>
               <tr>
-                <th @click="sortBy('id')" class="sortable">
-                  ID <i :class="getSortIcon('id')"></i>
-                </th>
+                <th>#</th>
                 <th @click="sortBy('first_name')" class="sortable">
                   Employee <i :class="getSortIcon('first_name')"></i>
                 </th>
@@ -135,13 +133,13 @@
               </tr>
               <tr
                 v-else
-                v-for="emp in paginatedEmployees"
+                v-for="(emp, index) in paginatedEmployees"
                 :key="emp.id"
                 @click="viewEmployee(emp.id)"
                 class="employee-row"
               >
                 <td>
-                  <span class="emp-id">EMP-{{ String(emp.id).padStart(3, '0') }}</span>
+                  <span class="emp-id">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</span>
                 </td>
                 <td>
                   <div class="employee-info">

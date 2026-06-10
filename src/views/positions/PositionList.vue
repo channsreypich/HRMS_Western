@@ -278,7 +278,8 @@ async function savePos() {
   const data = {
     title: form.title,
     base_salary: Number(form.base_salary),
-    department_id: Number(form.department_id),
+    // department_id is a UUID string — never coerce it with Number()
+    department_id: form.department_id || null,
   }
 
   if (editingPos.value) {
@@ -287,7 +288,7 @@ async function savePos() {
       toast.success('Position updated!')
       showModal.value = false
     } else {
-      toast.error('Update failed')
+      toast.error(res?.error || positionStore.error || 'Update failed')
     }
   } else {
     const res = await positionStore.createPosition(data)
@@ -295,7 +296,7 @@ async function savePos() {
       toast.success('Position created!')
       showModal.value = false
     } else {
-      toast.error('Create failed')
+      toast.error(res?.error || positionStore.error || 'Create failed')
     }
   }
 }

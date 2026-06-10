@@ -45,7 +45,7 @@
             </div>
             <div class="emp-field">
               <div class="field-label">Employee ID</div>
-              <div class="field-value">EMP-{{ String(record.employee_id).padStart(3, '0') }}</div>
+              <div class="field-value">{{ record.employee_code || '—' }}</div>
             </div>
             <div class="emp-field">
               <div class="field-label">Department</div>
@@ -98,10 +98,14 @@
           <div class="net-label">NET PAY</div>
           <div class="net-amount">${{ formatNum(record.net_salary) }}</div>
           <div class="net-status">
-            <span class="status-pill" :class="'s-' + (record.status || '').toLowerCase()">{{
-              record.status
-            }}</span>
-            <span class="paid-on" v-if="record.status === 'Paid'">Processed via Bank Network</span>
+            <span
+              class="status-pill"
+              :class="(record.status || '').toLowerCase() === 'paid' ? 's-paid' : 's-pending'"
+              >{{ record.status === 'draft' ? 'Pending' : record.status }}</span
+            >
+            <span class="paid-on" v-if="(record.status || '').toLowerCase() === 'paid'"
+              >Processed via Bank Network</span
+            >
           </div>
         </div>
 
@@ -132,11 +136,11 @@ const payrollStore = usePayrollStore()
 const record = ref(null)
 
 const monthLabel = computed(() => {
-  if (!record.value) return ''
-  return new Date(Number(record.value.year), Number(record.value.month) - 1).toLocaleDateString(
-    'en-US',
-    { year: 'numeric', month: 'long' },
-  )
+  if (!record.value?.payment_date) return ''
+  return new Date(record.value.payment_date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+  })
 })
 
 const earnings = computed(() =>
@@ -161,12 +165,7 @@ const deductions = computed(() =>
     : [],
 )
 
-const totalDeductions = computed(() => {
-  if (!record.value) return 0
-  return (
-    parseFloat(record.value.tax_deduction || 0) + parseFloat(record.value.insurance_deduction || 0)
-  )
-})
+const totalDeductions = computed(() => Number(record.value?.deductions || 0))
 
 const formatNum = (n) => new Intl.NumberFormat().format(Math.round(n || 0))
 
@@ -183,8 +182,8 @@ const printPayslip = () => {
 }
 
 onMounted(async () => {
-  await payrollStore.fetchAllPayrolls()
-  record.value = payrollStore.payrolls.find((r) => r.id === Number(route.params.id)) || null
+  // Fetch the single record by its UUID (comparing with Number() never matched a UUID)
+  record.value = await payrollStore.fetchPayslipById(route.params.id)
 })
 </script>
 

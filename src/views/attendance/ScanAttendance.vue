@@ -36,8 +36,15 @@
             type="text"
             v-model="temporaryCode"
             class="form-control-custom"
-            placeholder="e.g. EMP001"
+            style="text-transform: uppercase"
+            placeholder="e.g. EMP-001"
+            autocomplete="off"
+            autofocus
+            @keyup.enter="saveSetup"
           />
+          <small class="text-muted" style="font-size: 11px"
+            >Use the exact code from the Employees list (e.g. EMP-001).</small
+          >
         </div>
         <button type="button" class="btn-scan btn-checkin w-100" @click="saveSetup">
           <i class="fas fa-save me-2"></i> Register Device
@@ -47,10 +54,76 @@
       <form v-else @submit.prevent class="mt-4">
         <div class="form-group mb-4">
           <label class="form-label-custom"
-            ><i class="fas fa-camera me-2" style="color: #40c8da"></i>Take a Selfie Verification
-            *</label
+            ><i class="fas fa-camera me-2" style="color: #40c8da"></i>Face Verification *</label
           >
-          <div class="file-input-wrapper">
+
+          <!-- Live webcam stage (laptop + mobile) -->
+          <div class="camera-stage">
+            <!-- Captured preview -->
+            <img
+              v-if="previewUrl"
+              :src="previewUrl"
+              alt="Selfie Preview"
+              class="camera-feed"
+            />
+            <!-- Live video (mirrored so it feels like a selfie) -->
+            <video
+              v-show="!previewUrl"
+              ref="videoRef"
+              class="camera-feed mirror"
+              autoplay
+              playsinline
+              muted
+            ></video>
+
+            <div v-if="!cameraOn && !previewUrl" class="camera-placeholder">
+              <i class="fas fa-camera"></i>
+              <span>Camera is off</span>
+            </div>
+          </div>
+          <canvas ref="canvasRef" class="d-none"></canvas>
+
+          <!-- Camera controls -->
+          <div class="cam-controls mt-3">
+            <button
+              v-if="!cameraOn && !previewUrl"
+              type="button"
+              class="btn-cam"
+              @click="startCamera"
+            >
+              <i class="fas fa-video me-2"></i> Open Camera
+            </button>
+            <button
+              v-if="cameraOn && !previewUrl"
+              type="button"
+              class="btn-cam btn-cam-snap"
+              @click="capturePhoto"
+            >
+              <i class="fas fa-camera me-2"></i> Capture
+            </button>
+            <button v-if="previewUrl" type="button" class="btn-cam" @click="retake">
+              <i class="fas fa-redo me-2"></i> Retake
+            </button>
+          </div>
+
+          <!-- Face recognition status -->
+          <div class="face-status mt-2">
+            <span v-if="faceProcessing" style="color: #40c8da">
+              <i class="fas fa-spinner fa-spin"></i> Scanning face…
+            </span>
+            <span v-else-if="previewUrl && faceDescriptor" style="color: #34d399">
+              <i class="fas fa-user-check"></i> Face detected & ready to verify
+            </span>
+            <span v-else-if="faceReady" style="color: rgba(255, 255, 255, 0.5)">
+              <i class="fas fa-shield-alt"></i> Face recognition ready
+            </span>
+            <span v-else style="color: #fbbf24">
+              <i class="fas fa-spinner fa-spin"></i> Loading face models… (photo still works)
+            </span>
+          </div>
+
+          <!-- Fallback: upload a photo (devices without a webcam) -->
+          <div class="file-input-wrapper mt-2">
             <input
               type="file"
               accept="image/*"
@@ -58,16 +131,10 @@
               @change="handleFileUpload"
               class="form-control-file-hidden"
               id="selfie-camera"
-              required
             />
-            <label for="selfie-camera" class="btn-upload-trigger">
-              <i class="fas fa-user-circle me-2"></i>
-              {{ fileName || 'Tap to Open Front Camera' }}
+            <label for="selfie-camera" class="upload-fallback-link">
+              or upload a photo instead
             </label>
-          </div>
-
-          <div v-if="previewUrl" class="image-preview-box mt-3 text-center">
-            <img :src="previewUrl" alt="Selfie Preview" class="img-preview-thumb" />
           </div>
         </div>
 
@@ -110,9 +177,10 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue'
-import axios from 'axios'
+import { reactive, ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import api from '@/services/api'
 import Swal from 'sweetalert2'
+import { loadFaceModels, computeFaceDescriptor } from '@/utils/face'
 
 const isConfigured = ref(false)
 const temporaryCode = ref('')
@@ -123,27 +191,170 @@ const fileName = ref('')
 const previewUrl = ref('')
 const isSubmitting = ref(false)
 
+// ── Live webcam capture ──
+const videoRef = ref(null)
+const canvasRef = ref(null)
+const cameraOn = ref(false)
+let mediaStream = null
+
+// ── Face recognition ──
+const faceDescriptor = ref(null) // 128-number array for the captured face
+const faceReady = ref(false) // models loaded?
+const faceProcessing = ref(false) // computing descriptor right now
+
+const startCamera = async () => {
+  // getUserMedia only exists in a secure context (https or http://localhost)
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Camera not available',
+      html:
+        'The browser blocked camera access. Open the app via <b>http://localhost</b> or <b>https</b> ' +
+        '(the camera is disabled on plain <i>http://</i> LAN addresses), or use ' +
+        '<b>“upload a photo instead”</b> below.',
+    })
+    return
+  }
+
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false,
+    })
+    cameraOn.value = true
+    await nextTick() // ensure the <video> is in the DOM before attaching the stream
+    const video = videoRef.value
+    if (video) {
+      video.srcObject = mediaStream
+      // Some browsers only render once metadata is ready
+      video.onloadedmetadata = () => video.play().catch(() => {})
+      await video.play().catch(() => {})
+    }
+  } catch (err) {
+    stopCamera()
+    const name = err?.name || ''
+    let text = 'Could not access the camera. '
+    if (name === 'NotAllowedError' || name === 'SecurityError')
+      text += 'Permission was denied — allow camera access in the browser address bar, then retry.'
+    else if (name === 'NotFoundError' || name === 'OverconstrainedError')
+      text += 'No camera was found on this device.'
+    else if (name === 'NotReadableError')
+      text += 'The camera is already in use by another app — close it and retry.'
+    else text += 'You can use “upload a photo instead”. (' + (name || 'error') + ')'
+    Swal.fire({ icon: 'error', title: 'Camera unavailable', text })
+  }
+}
+
+const stopCamera = () => {
+  if (mediaStream) {
+    mediaStream.getTracks().forEach((t) => t.stop())
+    mediaStream = null
+  }
+  cameraOn.value = false
+}
+
+const capturePhoto = async () => {
+  const video = videoRef.value
+  const canvas = canvasRef.value
+  if (!video || !canvas) return
+
+  // The video may not have a frame yet right after opening
+  if (!video.videoWidth) {
+    Swal.fire({
+      icon: 'info',
+      title: 'One moment',
+      text: 'The camera is still starting — wait a second and tap Capture again.',
+      timer: 1500,
+      showConfirmButton: false,
+    })
+    return
+  }
+
+  const w = video.videoWidth
+  const h = video.videoHeight
+  canvas.width = w
+  canvas.height = h
+  // Save the true (un-mirrored) frame so HR sees the real face orientation
+  canvas.getContext('2d').drawImage(video, 0, 0, w, h)
+
+  // Run face recognition on the captured frame (when models are available)
+  if (faceReady.value) {
+    faceProcessing.value = true
+    try {
+      faceDescriptor.value = await computeFaceDescriptor(canvas)
+    } catch {
+      faceDescriptor.value = null
+    } finally {
+      faceProcessing.value = false
+    }
+    if (!faceDescriptor.value) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No face detected',
+        text: 'Center your face in the frame with good lighting, then tap Capture again.',
+      })
+      return // keep the camera on so the user can retry
+    }
+  }
+
+  canvas.toBlob(
+    (blob) => {
+      if (!blob) return
+      selfieFile.value = new File([blob], `selfie_${Date.now()}.jpg`, { type: 'image/jpeg' })
+      fileName.value = selfieFile.value.name
+      if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
+      previewUrl.value = URL.createObjectURL(blob)
+      stopCamera()
+    },
+    'image/jpeg',
+    0.9,
+  )
+}
+
+const retake = () => {
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
+  previewUrl.value = ''
+  selfieFile.value = null
+  fileName.value = ''
+  faceDescriptor.value = null
+  startCamera()
+}
+
+onBeforeUnmount(stopCamera)
+
 const OFFICE_LAT = 11.5723117
 const OFFICE_LNG = 104.8715964
 const ALLOWED_RADIUS_METERS = 50
 
 const IS_TEST_MODE = ref(true)
 
-onMounted(() => {
+onMounted(async () => {
   const savedCode = localStorage.getItem('user_employee_code')
   if (savedCode) {
     form.employee_code = savedCode
     isConfigured.value = true
   }
+  // Preload face-recognition models so capture is instant later
+  try {
+    await loadFaceModels()
+    faceReady.value = true
+  } catch (e) {
+    faceReady.value = false
+    console.warn('Face models failed to load; falling back to photo-only capture.', e)
+  }
 })
 
 const saveSetup = () => {
-  if (!temporaryCode.value.trim()) {
+  // Normalize the typed code: trim spaces and force uppercase so "emp-001",
+  // " EMP-001 " and "EMP-001" all register the same way.
+  const code = temporaryCode.value.trim().toUpperCase()
+  if (!code) {
     Swal.fire({ icon: 'warning', title: 'Oops...', text: 'Please enter your Employee Code!' })
     return
   }
-  localStorage.setItem('user_employee_code', temporaryCode.value.trim())
-  form.employee_code = temporaryCode.value.trim()
+  temporaryCode.value = code
+  localStorage.setItem('user_employee_code', code)
+  form.employee_code = code
   isConfigured.value = true
   Swal.fire({
     icon: 'success',
@@ -187,12 +398,34 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
   return R * c
 }
 
-const handleFileUpload = (event) => {
+const handleFileUpload = async (event) => {
   const file = event.target.files[0]
-  if (file) {
-    selfieFile.value = file
-    fileName.value = file.name
-    previewUrl.value = URL.createObjectURL(file)
+  if (!file) return
+  selfieFile.value = file
+  fileName.value = file.name
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
+  previewUrl.value = URL.createObjectURL(file)
+
+  // Try to read a face from the uploaded photo too, so verification still applies
+  if (faceReady.value) {
+    faceProcessing.value = true
+    try {
+      const img = new Image()
+      img.src = previewUrl.value
+      await img.decode()
+      faceDescriptor.value = await computeFaceDescriptor(img)
+    } catch {
+      faceDescriptor.value = null
+    } finally {
+      faceProcessing.value = false
+    }
+    if (!faceDescriptor.value) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No face detected',
+        text: 'The uploaded photo has no clear face. Please choose a clear, front-facing photo.',
+      })
+    }
   }
 }
 
@@ -204,10 +437,14 @@ const sendAttendancePayload = async (statusType) => {
   if (selfieFile.value) {
     formData.append('selfie', selfieFile.value)
   }
+  // Send the face descriptor so the backend can verify identity (or auto-enroll on first scan)
+  if (faceDescriptor.value) {
+    formData.append('face_descriptor', faceDescriptor.value.join(','))
+  }
 
   try {
     const endpoint = statusType === 'Present' ? 'check-in' : 'check-out'
-    const res = await axios.post(`http://localhost:8001/api/attendance/${endpoint}`, formData, {
+    const res = await api.post(`/api/attendance/${endpoint}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
 
@@ -215,7 +452,9 @@ const sendAttendancePayload = async (statusType) => {
       Swal.fire({ icon: 'success', title: 'Success!', text: res.data.message, timer: 3000 })
       selfieFile.value = null
       fileName.value = ''
+      if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
       previewUrl.value = ''
+      faceDescriptor.value = null
     }
   } catch (err) {
     Swal.fire({
@@ -229,11 +468,13 @@ const sendAttendancePayload = async (statusType) => {
 }
 
 const triggerAttendance = (statusType) => {
-  if (statusType === 'Present' && !selfieFile.value) {
+  // Face capture is required for BOTH check-in and check-out so every scan is traceable
+  if (!selfieFile.value) {
     Swal.fire({
       icon: 'warning',
-      title: 'Selfie Required',
-      text: 'Please take a selfie photo to verify check-in!',
+      title: 'Face Required',
+      text: 'Please capture your face (Open Camera → Capture) before ' +
+        (statusType === 'Present' ? 'checking in' : 'checking out') + '.',
     })
     return
   }
@@ -407,6 +648,73 @@ const triggerAttendance = (statusType) => {
   box-shadow: 0 8px 20px rgba(14, 165, 233, 0.2);
   padding: 3px;
   background: #ffffff;
+}
+
+/* Live camera UI */
+.camera-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #0b0b16;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.camera-feed {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.camera-feed.mirror {
+  transform: scaleX(-1); /* mirror the live preview like a selfie */
+}
+.camera-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 13px;
+}
+.camera-placeholder i {
+  font-size: 34px;
+}
+.cam-controls {
+  display: flex;
+  justify-content: center;
+}
+.btn-cam {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 22px;
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(135deg, #6823ff, #13707f);
+}
+.btn-cam-snap {
+  background: linear-gradient(135deg, #0284c7, #40c8da);
+}
+.upload-fallback-link {
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  text-decoration: underline;
+  cursor: pointer;
+  margin-top: 6px;
+}
+.face-status {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 /* Actions & Button Grids */

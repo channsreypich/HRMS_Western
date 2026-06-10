@@ -100,34 +100,31 @@ const errorMsg = ref('')
 
 const form = reactive({ email: '', password: '' })
 
-const fillDemo = () => {
-  form.email = 'admin@hrm.com'
-  form.password = 'Password123!'
-}
-
 const handleLogin = async () => {
   loading.value = true
   errorMsg.value = ''
 
-  const result = await auth.login(form)
+  try {
+    const result = await auth.login(form)
 
-  if (result?.success) {
-    toast.success('Welcome back to HRM System!')
-    const userRole = localStorage.getItem('user_role')
+    if (result?.success) {
+      toast.success('Welcome back to HRM System!')
 
-    if (userRole === 'Admin') {
-      router.push('/admin/dashboard')
+      // Use replace so the user cannot click "back" to return to the login page
+      // Accesses the 'homeRoute' computed property from your updated authStore
+      router.replace(auth.homeRoute)
     } else {
-      router.push('/dashboard')
+      errorMsg.value = auth.error || 'Invalid email or password.'
+      toast.error(errorMsg.value)
     }
-  } else {
-    errorMsg.value = auth.error || 'Invalid email or password. Please try again.'
+  } catch (err) {
+    errorMsg.value = 'An unexpected error occurred.'
     toast.error(errorMsg.value)
+  } finally {
     loading.value = false
   }
 }
 </script>
-
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 

@@ -55,6 +55,7 @@
                 type="text"
                 class="light-input"
                 v-model="form.first_name"
+                @input="onNameInput('first_name')"
                 placeholder="Enter first name"
                 :class="{ 'is-invalid': errors.first_name }"
               />
@@ -66,6 +67,7 @@
                 type="text"
                 class="light-input"
                 v-model="form.last_name"
+                @input="onNameInput('last_name')"
                 placeholder="Enter last name"
                 :class="{ 'is-invalid': errors.last_name }"
               />
@@ -87,12 +89,28 @@
               <label class="form-label required">Phone</label>
               <input
                 type="tel"
+                inputmode="numeric"
                 class="light-input"
                 v-model="form.phone"
+                @input="onPhoneInput"
                 placeholder="e.g., 012345678"
                 :class="{ 'is-invalid': errors.phone }"
               />
               <span class="err-msg" v-if="errors.phone">{{ errors.phone }}</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" :class="{ required: !isEdit }">Login Password</label>
+              <input
+                type="text"
+                class="light-input"
+                v-model="form.password"
+                :placeholder="isEdit ? 'Leave blank to keep current password' : 'Set a login password'"
+                :class="{ 'is-invalid': errors.password }"
+              />
+              <span class="err-msg" v-if="errors.password">{{ errors.password }}</span>
+              <small v-else class="text-muted" style="font-size: 11px; color: #64748b">
+                The employee signs in with their <strong>email</strong> + this password.
+              </small>
             </div>
           </div>
         </div>
@@ -163,24 +181,38 @@
           <div class="info-alert">
             <i class="fas fa-info-circle me-2"></i>
             <span
-              >Base salary is automatically synced from the chosen
-              <strong>Position Profile</strong> in the system database.</span
+              >Set the employee's monthly <strong>base salary</strong>. It is saved straight to the
+              database and used to generate payroll.</span
             >
           </div>
           <div class="form-grid mt-3">
             <div class="form-group">
-              <label class="form-label">System Record ID</label>
+              <label class="form-label required">Base Salary (USD / month)</label>
+              <div class="salary-wrap" :class="{ 'is-invalid': errors.base_salary }">
+                <span class="salary-prefix">$</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  class="salary-input"
+                  v-model.number="form.base_salary"
+                  placeholder="0.00"
+                />
+              </div>
+              <span class="err-msg" v-if="errors.base_salary">{{ errors.base_salary }}</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Employee Code</label>
               <input
                 type="text"
                 class="light-input"
-                :value="
-                  isEdit
-                    ? `EMP-${String(route.params.id).padStart(3, '0')}`
-                    : 'Auto-generated on creation'
-                "
+                :value="isEdit ? form.employee_code || '—' : 'Auto-generated on creation'"
                 disabled
                 style="opacity: 0.65; background: #f1f5f9"
               />
+              <small class="text-muted" style="font-size: 11px; color: #64748b"
+                >This is the code the employee enters to scan attendance.</small
+              >
             </div>
           </div>
         </div>
@@ -244,6 +276,7 @@ import { useEmployeeStore } from '@/stores/employee'
 import { useDepartmentStore } from '@/stores/department'
 import { usePositionStore } from '@/stores/position'
 import { toast } from 'vue3-toastify'
+import api from '@/services/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -267,6 +300,11 @@ const form = reactive({
   department_id: '',
   position_id: '',
   status: 'active',
+  base_salary: '',
+  employee_code: '',
+  username: '', // Add an input for this or generate it
+  password: '', // HR sets the login password (prefilled with a default on create)
+  role_id: '',
 })
 
 const steps = [
@@ -281,19 +319,45 @@ const errors = ref({})
 const departments = computed(() => departmentStore.departments)
 const positions = computed(() => positionStore.positions)
 
+// Letters, spaces, hyphens and apostrophes only — must start with a letter
+const NAME_RE = /^[A-Za-z][A-Za-z\s'-]*$/
+// 8–15 digits, optionally a single leading +
+const PHONE_RE = /^\+?\d{8,15}$/
+
+// Live input filters so the user physically cannot type invalid characters
+const onNameInput = (field) => {
+  form[field] = form[field].replace(/[^A-Za-z\s'-]/g, '')
+}
+const onPhoneInput = () => {
+  // keep digits and a single leading +
+  form.phone = form.phone.replace(/(?!^)\+/g, '').replace(/[^\d+]/g, '')
+}
+
 const validateStep = (step) => {
   const e = {}
   if (step === 0) {
-    if (!form.first_name) e.first_name = 'First name is required'
-    if (!form.last_name) e.last_name = 'Last name is required'
+    if (!form.first_name?.trim()) e.first_name = 'First name is required'
+    else if (!NAME_RE.test(form.first_name.trim()))
+      e.first_name = 'Name cannot contain numbers or symbols'
+    if (!form.last_name?.trim()) e.last_name = 'Last name is required'
+    else if (!NAME_RE.test(form.last_name.trim()))
+      e.last_name = 'Name cannot contain numbers or symbols'
     if (!form.email) e.email = 'Email is required'
     else if (!/^\S+@\S+\.\S+$/.test(form.email)) e.email = 'Invalid email format'
-    if (!form.phone) e.phone = 'Phone number is required'
+    if (!form.phone?.trim()) e.phone = 'Phone number is required'
+    else if (!PHONE_RE.test(form.phone.trim())) e.phone = 'Phone must be 8–15 digits (numbers only)'
+    if (!isEdit.value && !form.password) e.password = 'Login password is required'
+    else if (form.password && form.password.length < 6)
+      e.password = 'Password must be at least 6 characters'
   } else if (step === 1) {
     if (!form.department_id) e.department_id = 'Department selection is required'
     if (!form.position_id) e.position_id = 'Position selection is required'
     if (!form.status) e.status = 'Status is required'
     if (!form.hire_date) e.hire_date = 'Hire date is required'
+  } else if (step === 2) {
+    if (form.base_salary === '' || form.base_salary === null || form.base_salary === undefined)
+      e.base_salary = 'Base salary is required'
+    else if (Number(form.base_salary) < 0) e.base_salary = 'Base salary cannot be negative'
   }
   errors.value = e
   return Object.keys(e).length === 0
@@ -309,33 +373,70 @@ const goToStep = (step) => {
   if (step < currentStep.value || validateStep(currentStep.value)) currentStep.value = step
 }
 
-const saveEmployee = async () => {
-  for (let i = 0; i <= currentStep.value; i++) {
-    if (!validateStep(i)) {
-      currentStep.value = i
-      toast.error('Please fill in all required fields')
-      return
-    }
-  }
-  saving.value = true
-  try {
-    if (isEdit.value) {
-      const res = await employeeStore.updateEmployee(route.params.id, form)
-      if (res) toast.success('Employee updated successfully')
-    } else {
-      const payload = {
-        ...form,
-        employee_code: 'EMP-' + Date.now(),
+  const saveEmployee = async () => {
+    // 1. Validation Logic
+    for (let i = 0; i <= currentStep.value; i++) {
+      if (!validateStep(i)) {
+        currentStep.value = i
+        toast.error('Please fill in all required fields')
+        return
       }
-      const res = await employeeStore.createEmployee(payload)
-      if (res) toast.success('Employee created successfully')
     }
-    router.push('/employees')
-  } catch (error) {
-    toast.error(error.message || 'Failed to sync data with database')
-  } finally {
-    saving.value = false
-  }
+
+    saving.value = true
+
+    // 2. Map form to backend DTO structure (role_id omitted -> backend defaults to EMPLOYEE)
+    const payload = {
+      first_name: form.first_name,
+      last_name: form.last_name,
+      email: form.email,
+      phone: form.phone,
+      hire_date: form.hire_date,
+      department_id: form.department_id,
+      position_id: form.position_id,
+      status: form.status,
+      // Always send salary so an edit never accidentally blanks it on the backend
+      base_salary:
+        form.base_salary === '' || form.base_salary == null ? 0 : Number(form.base_salary),
+      username: form.email.split('@')[0],
+    }
+    // Only send a password when set: required on create, optional on edit (blank = keep current)
+    if (form.password) payload.password = form.password
+    if (form.role_id) payload.role_id = form.role_id
+
+    try {
+      let employeeId = route.params.id
+      if (isEdit.value) {
+        const res = await employeeStore.updateEmployee(route.params.id, payload)
+        if (!res.success) throw new Error(res.error || 'Failed to update employee')
+      } else {
+        const res = await employeeStore.createEmployee(payload)
+        if (!res.success) throw new Error(res.error || 'Failed to create employee')
+        employeeId = res.data?.id
+      }
+
+      // 3. Upload any attached documents for this employee
+      const newFiles = documentsList.value.filter((d) => d.file)
+      if (employeeId && newFiles.length) {
+        await Promise.all(
+          newFiles.map((d) => {
+            const fd = new FormData()
+            fd.append('file', d.file)
+            return api.post(`/api/documents/upload/${employeeId}`, fd, {
+              headers: { 'Content-Type': 'multipart/form-data' },
+            })
+          }),
+        )
+      }
+
+      toast.success(isEdit.value ? 'Employee updated successfully' : 'Employee created successfully')
+      router.push('/employees')
+    } catch (error) {
+      console.error('Submission Error:', error)
+      toast.error(error.response?.data?.message || error.message || 'Failed to sync data with database')
+    } finally {
+      saving.value = false
+    }
 }
 
 const cancelForm = () => {
@@ -359,7 +460,7 @@ const addFiles = (files) => {
       toast.error(`${f.name} exceeds 5MB limit`)
       return
     }
-    documentsList.value.push({ name: f.name, size: f.size, type: f.type })
+    documentsList.value.push({ name: f.name, size: f.size, type: f.type, file: f })
   })
 }
 const removeFile = (index) => {
@@ -382,19 +483,28 @@ onMounted(async () => {
   await departmentStore.fetchDepartments()
   await positionStore.fetchPositions()
 
+  // Prefill a sensible default password for NEW employees (HR can change it before saving)
+  if (!isEdit.value) {
+    form.password = 'Password@123'
+  }
+
   if (isEdit.value) {
     await employeeStore.fetchEmployees()
     const emp = employeeStore.employees.find((e) => String(e.id) === String(route.params.id))
     if (emp) {
       Object.assign(form, {
-        first_name: emp.first_name,
-        last_name: emp.last_name,
-        email: emp.email,
-        phone: emp.phone,
-        hire_date: new Date(emp.hire_date).toISOString().split('T')[0],
-        department_id: emp.department_id,
-        position_id: emp.position_id,
-        status: emp.status,
+        first_name: emp.first_name || '',
+        last_name: emp.last_name || '',
+        email: emp.email || '',
+        phone: emp.phone || '',
+        hire_date: emp.hire_date
+          ? new Date(emp.hire_date).toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0],
+        department_id: emp.department_id || '',
+        position_id: emp.position_id || '',
+        status: emp.status || 'active',
+        base_salary: emp.base_salary ?? 0,
+        employee_code: emp.employee_code ?? '',
       })
     }
   }
@@ -610,6 +720,41 @@ onMounted(async () => {
   align-items: center;
   color: #166534;
   font-size: 0.83rem;
+}
+
+/* ── Editable Salary Field ── */
+.salary-wrap {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+.salary-wrap:focus-within {
+  border-color: #6823ff;
+  box-shadow: 0 0 0 3px rgba(104, 35, 255, 0.1);
+}
+.salary-wrap.is-invalid {
+  border-color: #dc2626;
+  background-color: #fffafb;
+}
+.salary-prefix {
+  padding: 0.65rem 0.5rem 0.65rem 1rem;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.salary-input {
+  flex: 1;
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0.65rem 1rem 0.65rem 0.25rem;
+  color: #0f172a;
+  font-size: 0.88rem;
 }
 
 /* ── Document Drop-Zone Spaces ── */

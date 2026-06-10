@@ -132,64 +132,16 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import MainLayout from '@/components/layouts/MainLayout.vue'
-import { useEmployeeStore } from '@/stores/employee'
-import { useLeaveStore } from '@/stores/leave'
-import { useAttendanceStore } from '@/stores/attendance'
+import { useDashboardStore } from '@/stores/dashboard'
 
-const employeeStore = useEmployeeStore()
-const leaveStore = useLeaveStore()
-const attendanceStore = useAttendanceStore()
+const dashboardStore = useDashboardStore()
 
-const dashboardStats = computed(() => {
-  const totalEmployees = employeeStore.employees?.length || 0
-  const activeEmployees = employeeStore.employees?.filter((e) => e.status === 'active')?.length || 0
-  const pendingLeaves = leaveStore.leaves?.filter((l) => l.status === 'pending')?.length || 0
-  const todayAttendance =
-    attendanceStore.attendanceRecords?.filter((r) => {
-      const todayStr = new Date().toISOString().split('T')[0]
-      return r.date?.split('T')[0] === todayStr && r.status === 'Present'
-    })?.length || 0
+// Cards come straight from the backend /api/dashboard/metrics endpoint so the
+// counts (and trends) always reflect the real database, not client-side guesses.
+const dashboardStats = computed(() => dashboardStore.stats || [])
 
-  return [
-    {
-      title: 'Total Workforce',
-      value: totalEmployees,
-      icon: 'fas fa-users',
-      color: '#6823ff',
-      trend: 12,
-    },
-    {
-      title: 'Active Staff',
-      value: activeEmployees,
-      icon: 'fas fa-check-circle',
-      color: '#059669',
-      trend: 8,
-    },
-    {
-      title: 'Pending Leaves',
-      value: pendingLeaves,
-      icon: 'fas fa-calendar-alt',
-      color: '#b45309',
-      trend: -4,
-    },
-    {
-      title: 'Present Today',
-      value: todayAttendance,
-      icon: 'fas fa-clock',
-      color: '#06b6d4',
-      trend: 15,
-    },
-  ]
-})
-
-onMounted(async () => {
-  await employeeStore.fetchEmployees()
-  try {
-    await leaveStore.fetchAllLeaves()
-    await attendanceStore.fetchAllAttendance()
-  } catch (err) {
-    console.log('Optional dashboard metrics skipped.')
-  }
+onMounted(() => {
+  dashboardStore.fetchDashboardStats()
 })
 </script>
 

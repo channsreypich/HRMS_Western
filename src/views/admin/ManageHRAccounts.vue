@@ -31,8 +31,8 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="hr in hrUsers" :key="hr.id">
-                <td>#{{ hr.id }}</td>
+              <tr v-for="(hr, index) in hrUsers" :key="hr.id">
+                <td>{{ index + 1 }}</td>
                 <td class="user-fullname">{{ hr.first_name }} {{ hr.last_name }}</td>
                 <td>{{ hr.email }}</td>
                 <td>
@@ -134,12 +134,11 @@
     </div>
   </MainLayout>
 </template>
-
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import axios from 'axios'
 import Swal from 'sweetalert2'
 import MainLayout from '@/components/layouts/MainLayout.vue'
+import api from '@/services/api'
 
 const hrUsers = ref([])
 const showModal = ref(false)
@@ -152,23 +151,30 @@ const form = reactive({
   password: '',
 })
 
+// 1. LOAD ALL USER ACCOUNTS FROM THE BACKEND (GET /api/auth/users-list)
 const fetchHRUsers = async () => {
   try {
-    const token = localStorage.getItem('token')
-    const res = await axios.get('http://localhost:8001/api/auth/users-list', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const res = await api.get('/api/auth/users-list')
     if (res.data.success) {
-      hrUsers.value = res.data.data
+      hrUsers.value = res.data.data || []
     }
   } catch (err) {
-    console.error('Failed to load users:', err)
+    console.error('Failed to load HR users:', err.response?.data || err.message)
+    Swal.fire({
+      icon: 'error',
+      title: 'Could not load accounts',
+      text: err.response?.data?.message || 'Unable to reach the server.',
+      background: '#ffffff',
+      color: '#1a1a1a',
+      confirmButtonColor: '#6823ff',
+    })
   }
 }
 
 const openCreateModal = () => {
   showModal.value = true
 }
+
 const closeModal = () => {
   showModal.value = false
   form.first_name = ''
@@ -177,16 +183,21 @@ const closeModal = () => {
   form.password = ''
 }
 
+// 2. CREATE A REAL HR ACCOUNT (POST /api/auth/register-hr)
 const submitCreateHR = async () => {
   isSubmitting.value = true
   try {
-    const token = localStorage.getItem('token')
-    const payload = { ...form, role: 'HR' }
+    const payload = {
+      first_name: form.first_name,
+      last_name: form.last_name,
+      // Backend requires a username; derive a sensible default from the email.
+      username: form.email.split('@')[0],
+      email: form.email,
+      password: form.password,
+      role: 'HR',
+    }
 
-    const res = await axios.post('http://localhost:8001/api/auth/register-hr', payload, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-
+    const res = await api.post('/api/auth/register-hr', payload)
     if (res.data.success) {
       Swal.fire({
         icon: 'success',
@@ -197,7 +208,7 @@ const submitCreateHR = async () => {
         confirmButtonColor: '#6823ff',
       })
       closeModal()
-      fetchHRUsers()
+      await fetchHRUsers() // refresh from DB so the table reflects persisted data
     }
   } catch (err) {
     Swal.fire({
@@ -213,6 +224,7 @@ const submitCreateHR = async () => {
   }
 }
 
+// 3. TOGGLE ACCOUNT ACCESS (PATCH /api/auth/user-status/{id})
 const handleToggleStatus = async (userId, currentStatus) => {
   const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active'
   const textAlert = newStatus === 'Active' ? 'activate' : 'deactivate'
@@ -229,37 +241,33 @@ const handleToggleStatus = async (userId, currentStatus) => {
     color: '#1a1a1a',
   })
 
-  if (confirmResult.isConfirmed) {
-    try {
-      const token = localStorage.getItem('token')
-      const res = await axios.patch(
-        `http://localhost:8001/api/auth/user-status/${userId}`,
-        { status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } },
-      )
-      if (res.data.success) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Status Updated!',
-          background: '#ffffff',
-          color: '#1a1a1a',
-          confirmButtonColor: '#6823ff',
-        })
-        fetchHRUsers()
-      }
-    } catch (err) {
+  if (!confirmResult.isConfirmed) return
+
+  try {
+    const res = await api.patch(`/api/auth/user-status/${userId}`, { status: newStatus })
+    if (res.data.success) {
       Swal.fire({
-        title: 'Error',
-        text: 'Failed to update status.',
-        icon: 'error',
+        icon: 'success',
+        title: 'Status Updated!',
         background: '#ffffff',
         color: '#1a1a1a',
         confirmButtonColor: '#6823ff',
       })
+      await fetchHRUsers()
     }
+  } catch (err) {
+    Swal.fire({
+      title: 'Error',
+      text: err.response?.data?.message || 'Failed to update status.',
+      icon: 'error',
+      background: '#ffffff',
+      color: '#1a1a1a',
+      confirmButtonColor: '#6823ff',
+    })
   }
 }
 
+// 4. DELETE AN ACCOUNT (DELETE /api/auth/user/{id})
 const handleDeleteUser = async (userId) => {
   const confirmResult = await Swal.fire({
     title: 'Permanently Remove?',
@@ -273,30 +281,27 @@ const handleDeleteUser = async (userId) => {
     color: '#1a1a1a',
   })
 
-  if (confirmResult.isConfirmed) {
-    try {
-      const token = localStorage.getItem('token')
-      await axios.delete(`http://localhost:8001/api/auth/user/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      Swal.fire({
-        title: 'Removed!',
-        icon: 'success',
-        background: '#ffffff',
-        color: '#1a1a1a',
-        confirmButtonColor: '#6823ff',
-      })
-      fetchHRUsers()
-    } catch (err) {
-      Swal.fire({
-        title: 'Error',
-        text: 'Failed to delete user.',
-        icon: 'error',
-        background: '#ffffff',
-        color: '#1a1a1a',
-        confirmButtonColor: '#6823ff',
-      })
-    }
+  if (!confirmResult.isConfirmed) return
+
+  try {
+    await api.delete(`/api/auth/user/${userId}`)
+    Swal.fire({
+      title: 'Removed!',
+      icon: 'success',
+      background: '#ffffff',
+      color: '#1a1a1a',
+      confirmButtonColor: '#6823ff',
+    })
+    await fetchHRUsers()
+  } catch (err) {
+    Swal.fire({
+      title: 'Error',
+      text: err.response?.data?.message || 'Failed to delete user.',
+      icon: 'error',
+      background: '#ffffff',
+      color: '#1a1a1a',
+      confirmButtonColor: '#6823ff',
+    })
   }
 }
 
@@ -304,9 +309,7 @@ onMounted(() => {
   fetchHRUsers()
 })
 </script>
-
 <style scoped>
-
 .admin-dashboard-layout {
   padding: 0.5rem;
   color: #1a1a1a;

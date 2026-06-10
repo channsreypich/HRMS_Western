@@ -31,7 +31,7 @@
               <div>
                 <h1 class="page-title">{{ employee?.first_name }} {{ employee?.last_name }}</h1>
                 <div class="header-badges">
-                  <span class="emp-id-badge">EMP-{{ String(employee?.id).padStart(3, '0') }}</span>
+                  <span class="emp-id-badge">{{ employee?.employee_code || '—' }}</span>
                   <span class="badge-status" :class="getStatusClass(employee?.status)">
                     {{ employee?.status }}
                   </span>
@@ -45,6 +45,22 @@
               <button class="btn-ghost" @click="router.push('/employees')">
                 <i class="fas fa-arrow-left me-2"></i>Back
               </button>
+              <button
+                v-if="!employee?.face_enrolled"
+                class="btn-ghost"
+                @click="showEnroll = true"
+                title="Register this employee's face for attendance scanning"
+              >
+                <i class="fas fa-camera me-2"></i>Enroll Face
+              </button>
+              <template v-else>
+                <button class="btn-ghost" @click="showEnroll = true" title="Capture a new face">
+                  <i class="fas fa-sync-alt me-2"></i>Re-enroll
+                </button>
+                <button class="btn-ghost" @click="resetFace" title="Clear the registered face">
+                  <i class="fas fa-user-shield me-2"></i>Reset Face
+                </button>
+              </template>
               <button class="btn-primary" @click="editEmployee">
                 <i class="fas fa-edit me-2"></i>Edit
               </button>
@@ -91,6 +107,15 @@
             </div>
             <div class="info-rows">
               <div class="info-row">
+                <span class="info-label">Employee Code</span>
+                <span class="info-value">
+                  <span class="code-badge">{{ employee?.employee_code || '—' }}</span>
+                  <small style="color: #94a3b8; margin-left: 8px"
+                    >Enter this code to scan attendance</small
+                  >
+                </span>
+              </div>
+              <div class="info-row">
                 <span class="info-label">Department</span>
                 <span class="info-value">
                   <span class="dept-badge" v-if="employee?.department_name">
@@ -112,6 +137,18 @@
                 <span class="info-value salary-value">{{
                   formatSalary(employee?.base_salary)
                 }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Face Recognition</span>
+                <span class="info-value">
+                  <span v-if="employee?.face_enrolled" style="color: #16a34a; font-weight: 600">
+                    <i class="fas fa-user-check me-1"></i>Enrolled
+                  </span>
+                  <span v-else style="color: #94a3b8">
+                    <i class="fas fa-user-clock me-1"></i>Not enrolled (HR must enroll before
+                    scanning)
+                  </span>
+                </span>
               </div>
             </div>
           </div>
@@ -161,6 +198,14 @@
         </div>
       </div>
     </div>
+
+    <FaceEnrollModal
+      :show="showEnroll"
+      :employee-id="route.params.id"
+      :employee-name="`${employee?.first_name || ''} ${employee?.last_name || ''}`.trim()"
+      @close="showEnroll = false"
+      @enrolled="onEnrolled"
+    />
   </MainLayout>
 </template>
 
@@ -170,6 +215,8 @@ import { useRoute, useRouter } from 'vue-router'
 import MainLayout from '@/components/layouts/MainLayout.vue'
 import { useEmployeeStore } from '@/stores/employee'
 import { toast } from 'vue3-toastify'
+import api from '@/services/api'
+import FaceEnrollModal from '@/components/FaceEnrollModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -179,6 +226,11 @@ const loading = ref(true)
 const error = ref(null)
 const employee = ref(null)
 const showDeleteModal = ref(false)
+const showEnroll = ref(false)
+
+const onEnrolled = () => {
+  if (employee.value) employee.value.face_enrolled = true
+}
 
 const formatDate = (date) => {
   if (!date) return 'N/A'
@@ -215,6 +267,16 @@ const getAvatarGradient = (name) => {
 const editEmployee = () => router.push(`/employees/${route.params.id}/edit`)
 const confirmDelete = () => {
   showDeleteModal.value = true
+}
+
+const resetFace = async () => {
+  try {
+    await api.delete(`/api/attendance/face/${route.params.id}`)
+    toast.success('Face enrollment reset — the next scan will re-enroll this employee.')
+    if (employee.value) employee.value.face_enrolled = false
+  } catch (err) {
+    toast.error(err.response?.data?.message || 'Failed to reset face enrollment')
+  }
 }
 
 const deleteEmployee = async () => {
@@ -456,6 +518,16 @@ onMounted(async () => {
   border-radius: 20px;
   font-size: 0.73rem;
   font-weight: 700;
+}
+.code-badge {
+  background: #0f172a;
+  color: #fff;
+  padding: 3px 12px;
+  border-radius: 8px;
+  font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 /* ── Interactive Toolbar Actions ── */

@@ -67,9 +67,7 @@
 
             <div class="days-display" v-if="displayDays > 0">
               <i class="fas fa-calendar-day"></i>
-              <strong>{{ displayDays }}</strong> working day{{
-                displayDays > 1 ? 's' : ''
-              }}
+              <strong>{{ displayDays }}</strong> working day{{ displayDays > 1 ? 's' : '' }}
               selected
             </div>
 

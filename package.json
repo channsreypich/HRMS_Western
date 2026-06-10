@@ -20,6 +20,7 @@
     "axios": "^1.13.6",
     "bootstrap": "^5.3.8",
     "chart.js": "^4.5.1",
+    "face-api.js": "^0.22.2",
     "lodash": "^4.17.23",
     "pinia": "^3.0.4",
     "sweetalert2": "^11.26.25",

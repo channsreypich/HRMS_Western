@@ -36,7 +36,8 @@
           <input type="text" class="search-inp" placeholder="Search employee..." v-model="search" />
         </div>
         <select class="filter-sel" v-model="selectedMonth">
-          <option v-for="m in months" :key="m.value" :value="m.value">{{ m.label }}</option>
+          <option value="">All Months</option>
+          <option v-for="m in monthOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
         </select>
         <select class="filter-sel" v-model="filterStatus">
           <option value="">All Status</option>
@@ -96,7 +97,7 @@
                     </div>
                     <div>
                       <div class="emp-name">{{ rec.first_name }} {{ rec.last_name }}</div>
-                      <div class="emp-code">EMP-{{ String(rec.employee_id).padStart(3, '0') }}</div>
+                      <div class="emp-code">{{ rec.employee_code || '—' }}</div>
                     </div>
                   </div>
                 </td>
@@ -113,11 +114,11 @@
                 <td>
                   <span
                     class="status-badge"
-                    :class="'status-' + (rec.status || '').toLowerCase()"
+                    :class="(rec.status || '').toLowerCase() === 'paid' ? 'status-paid' : 'status-pending'"
                     @click="toggleStatus(rec)"
                     style="cursor: pointer"
                   >
-                    {{ rec.status === 'draft' ? 'Pending' : rec.status.toUpperCase() }}
+                    {{ rec.status === 'draft' ? 'Pending' : (rec.status || '').toUpperCase() }}
                   </span>
                 </td>
                 <td>
@@ -171,17 +172,27 @@ const payrollStore = usePayrollStore()
 const router = useRouter()
 
 const search = ref('')
-const selectedMonth = ref('2026-04')
+const selectedMonth = ref('') // '' = All Months, so seeded/generated records are always visible
 const filterStatus = ref('')
 const filterDept = ref('')
 const page = ref(1)
 const perPage = 10
 
-const months = [
-  { value: '2026-03', label: 'March 2026' },
-  { value: '2026-04', label: 'April 2026' },
-  { value: '2026-05', label: 'May 2026' },
-]
+// Build month choices from the actual records, always including the current month for generation
+const monthOptions = computed(() => {
+  const set = new Set((payrollStore.payrolls || []).map((r) => r.payment_month).filter(Boolean))
+  set.add(new Date().toISOString().slice(0, 7))
+  return [...set]
+    .sort()
+    .reverse()
+    .map((value) => ({
+      value,
+      label: new Date(value + '-01').toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+      }),
+    }))
+})
 
 const departments = computed(() => {
   const records = payrollStore.payrolls || []
@@ -266,9 +277,12 @@ const viewPayslip = (id) => router.push(`/payroll/${id}/payslip`)
 const exportPayroll = () => toast.info('Export features activated via client layout')
 
 const processPayroll = async () => {
-  const res = await payrollStore.generateMonthlyPayroll({ payment_month: selectedMonth.value })
+  // Generate for the selected month, or the current month when "All Months" is active
+  const month = selectedMonth.value || new Date().toISOString().slice(0, 7)
+  const res = await payrollStore.generateMonthlyPayroll({ payment_month: month })
   if (res?.success) {
-    toast.success('Monthly payroll sheets generated successfully!')
+    toast.success(res.message || 'Monthly payroll sheets generated successfully!')
+    selectedMonth.value = month // jump the filter to the generated month so the rows are visible
   } else {
     toast.error(payrollStore.error || 'Processing failed')
   }

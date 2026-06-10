@@ -81,8 +81,10 @@ import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import MainLayout from '@/components/layouts/MainLayout.vue'
 import Chart from 'chart.js/auto'
+import { useReportStore } from '@/stores/report'
 
 const router = useRouter()
+const reportStore = useReportStore()
 const currentDate = new Date().toLocaleDateString('en-US', {
   weekday: 'long',
   year: 'numeric',
@@ -167,21 +169,39 @@ const reportCards = [
 ]
 
 const goToReport = (report) => {
-  if (report.route === '/reports/headcount') router.push(report.route)
-  else router.push({ name: 'reports' })
+  // report.route looks like "/reports/headcount" -> navigate to the detail page for that key
+  router.push(report.route)
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // Pull live data; fall back to placeholders if the backend returns nothing
+  const [headcount, payroll] = await Promise.all([
+    reportStore.fetchHeadcount(),
+    reportStore.fetchPayrollExpenditure(),
+  ])
+
+  const deptLabels = headcount.length
+    ? headcount.map((r) => r.departmentName)
+    : ['Engineering', 'HR', 'Finance', 'Marketing', 'Operations', 'Sales']
+  const deptData = headcount.length
+    ? headcount.map((r) => Number(r.employeeCount) || 0)
+    : [24, 8, 12, 15, 20, 18]
+
+  const payLabels = payroll.length ? payroll.map((r) => r.month) : ['Jan', 'Feb', 'Mar', 'Apr', 'May']
+  const payData = payroll.length
+    ? payroll.map((r) => Number(r.total_expenditure) || 0)
+    : [65000, 67200, 68400, 70100, 71400]
+
   const ctx1 = document.getElementById('deptChart')?.getContext('2d')
   if (ctx1) {
     new Chart(ctx1, {
       type: 'bar',
       data: {
-        labels: ['Engineering', 'HR', 'Finance', 'Marketing', 'Operations', 'Sales'],
+        labels: deptLabels,
         datasets: [
           {
             label: 'Employees',
-            data: [24, 8, 12, 15, 20, 18],
+            data: deptData,
             backgroundColor: ['#6823ff', '#0284c7', '#d97706', '#dc2626', '#16a34a', '#7c3aed'],
             borderRadius: 6,
             borderSkipped: false,
@@ -211,11 +231,11 @@ onMounted(() => {
     new Chart(ctx2, {
       type: 'line',
       data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+        labels: payLabels,
         datasets: [
           {
             label: 'Net Payroll ($)',
-            data: [65000, 67200, 68400, 70100, 71400],
+            data: payData,
             borderColor: '#6823ff',
             backgroundColor: 'rgba(104,35,255,0.05)',
             tension: 0.35,

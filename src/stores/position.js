@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import api from '@/services/api' 
+import api, { unwrap } from '@/services/api'
 
 export const usePositionStore = defineStore('position', () => {
   const positions = ref([])
@@ -12,9 +12,10 @@ export const usePositionStore = defineStore('position', () => {
     loading.value = true
     error.value = null
     try {
-      const response = await api.get('/positions')
+      const response = await api.get('/api/positions')
       if (response.data.success) {
-        positions.value = response.data.data // ញាត់កញ្ចប់ទិន្នន័យពិតចូលក្នុង UI
+        const data = unwrap(response) // unwraps the paginated Page -> array
+        positions.value = Array.isArray(data) ? data : []
       }
       return positions.value
     } catch (err) {
@@ -30,7 +31,7 @@ export const usePositionStore = defineStore('position', () => {
     error.value = null
     try {
       // បាញ់បញ្ជូន title និង base_salary ទៅកាន់ Backend
-      const response = await api.post('/positions', data)
+      const response = await api.post('/api/positions', data)
       if (response.data.success) {
         await fetchPositions() // បង្កើតជោគជ័យ ឱ្យវា Refresh បញ្ជីឡើងវិញភ្លាម
         return { success: true }
@@ -48,7 +49,7 @@ export const usePositionStore = defineStore('position', () => {
     loading.value = true
     error.value = null
     try {
-      const response = await api.put(`/positions/${id}`, data)
+      const response = await api.put(`/api/positions/${id}`, data)
       if (response.data.success) {
         await fetchPositions() // Refresh ទិន្នន័យថ្មីក្រោយកែប្រែរួច
         return { success: true }
@@ -66,7 +67,7 @@ export const usePositionStore = defineStore('position', () => {
     loading.value = true
     error.value = null
     try {
-      const response = await api.delete(`/positions/${id}`)
+      const response = await api.delete(`/api/positions/${id}`)
       if (response.data.success) {
         await fetchPositions() // Refresh បញ្ជីឡើងវិញក្រោយលុបជោគជ័យ
         return { success: true }
@@ -79,13 +80,13 @@ export const usePositionStore = defineStore('position', () => {
     }
   }
 
-  return { 
-    positions, 
-    loading, 
-    error, 
-    fetchPositions, 
-    createPosition, 
-    updatePosition, 
-    deletePosition 
+  return {
+    positions,
+    loading,
+    error,
+    fetchPositions,
+    createPosition,
+    updatePosition,
+    deletePosition,
   }
 })

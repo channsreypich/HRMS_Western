@@ -82,6 +82,7 @@
             <thead>
               <tr>
                 <th>Employee</th>
+                <th>Face</th>
                 <th>Department</th>
                 <th>Date</th>
                 <th>Check In</th>
@@ -91,13 +92,13 @@
             </thead>
             <tbody>
               <tr v-if="attStore.loading">
-                <td colspan="6" class="loading-row">
+                <td colspan="7" class="loading-row">
                   <div class="pulse-loader"></div>
                   Loading records...
                 </td>
               </tr>
               <tr v-else-if="paginated.length === 0">
-                <td colspan="6" class="empty-row">
+                <td colspan="7" class="empty-row">
                   <i class="fas fa-clock fa-2x mb-2"></i><br />No records found
                 </td>
               </tr>
@@ -114,18 +115,30 @@
                   </div>
                 </td>
                 <td>
+                  <a
+                    v-if="rec.selfie_url"
+                    :href="selfieUrl(rec.selfie_url)"
+                    target="_blank"
+                    rel="noopener"
+                    title="View captured face"
+                  >
+                    <img :src="selfieUrl(rec.selfie_url)" alt="face" class="face-thumb" />
+                  </a>
+                  <span class="na-text" v-else><i class="fas fa-user-slash"></i></span>
+                </td>
+                <td>
                   <span class="dept-chip">{{ rec.department_name || '—' }}</span>
                 </td>
                 <td>{{ formatDate(rec.date) }}</td>
                 <td>
                   <span class="time-badge" v-if="rec.check_in">
-                    <i class="fas fa-sign-in-alt"></i> {{ rec.check_in }}
+                    <i class="fas fa-sign-in-alt"></i> {{ formatTime(rec.check_in) }}
                   </span>
                   <span class="na-text" v-else>—</span>
                 </td>
                 <td>
                   <span class="time-badge out" v-if="rec.check_out">
-                    <i class="fas fa-sign-out-alt"></i> {{ rec.check_out }}
+                    <i class="fas fa-sign-out-alt"></i> {{ formatTime(rec.check_out) }}
                   </span>
                   <span class="na-text" v-else>—</span>
                 </td>
@@ -281,7 +294,6 @@ import MainLayout from '@/components/layouts/MainLayout.vue'
 import { useAttendanceStore } from '@/stores/attendance'
 import { useEmployeeStore } from '@/stores/employee'
 import { toast } from 'vue3-toastify'
-import api from '@/services/api'
 
 const attStore = useAttendanceStore()
 const employeeStore = useEmployeeStore()
@@ -456,6 +468,22 @@ const formatDate = (d) => {
   })} ${dateObj.getDate()}, ${dateObj.getFullYear()}`
 }
 
+// check_in/check_out arrive as ISO date-times; show just the time (e.g. 08:45 AM)
+const formatTime = (dt) => {
+  if (!dt) return '—'
+  const d = new Date(dt)
+  if (isNaN(d)) return dt
+  return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+}
+
+// Build a full URL to the stored selfie (backend serves it from /uploads)
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+const selfieUrl = (path) => {
+  if (!path) return ''
+  if (/^https?:\/\//.test(path)) return path
+  return `${API_BASE}/${String(path).replace(/^\/?/, '')}`
+}
+
 const prevMonth = () => calOffset.value--
 const nextMonth = () => calOffset.value++
 const resetFilters = () => {
@@ -507,26 +535,20 @@ async function markAtt() {
     return
   }
 
-  attStore.loading = true
-  try {
-    const response = await api.post('/attendance/check-in', {
-      employee_code: markForm.employee_code,
-      bypass_selfie: true,
-      date: markForm.date,
-      status: markForm.status,
-      check_in: markForm.check_in,
-      check_out: markForm.check_out,
-    })
+  const result = await attStore.markManual({
+    employee_id: markForm.employee_id,
+    date: markForm.date,
+    status: markForm.status,
+    check_in: markForm.check_in,
+    check_out: markForm.check_out,
+  })
 
-    if (response.data.success) {
-      toast.success('Attendance record saved!')
-      await attStore.fetchAllAttendance()
-      showMarkModal.value = false
-    }
-  } catch (err) {
-    toast.error(err.response?.data?.message || 'Failed to save attendance record')
-  } finally {
-    attStore.loading = false
+  if (result.success) {
+    toast.success('Attendance record saved!')
+    await attStore.fetchAllAttendance()
+    showMarkModal.value = false
+  } else {
+    toast.error(result.error || 'Failed to save attendance record')
   }
 }
 
@@ -1218,5 +1240,18 @@ onMounted(async () => {
     transform: scale(0.8);
     opacity: 0.5;
   }
+}
+
+.face-thumb {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(64, 200, 218, 0.6);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.face-thumb:hover {
+  transform: scale(1.15);
 }
 </style>

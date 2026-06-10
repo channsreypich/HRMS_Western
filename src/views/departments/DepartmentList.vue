@@ -51,7 +51,7 @@
 
       <template v-else>
         <div v-if="viewMode === 'grid'" class="dept-grid">
-          <div class="dept-card" v-for="dept in filtered" :key="dept.id">
+          <div class="dept-card" v-for="(dept, index) in filtered" :key="dept.id">
             <div class="dept-color-bar" :style="{ background: dept.color }"></div>
             <div class="dept-card-body">
               <div class="dept-top">
@@ -84,7 +84,7 @@
               </div>
               <div class="dept-footer">
                 <span class="status-badge badge-active">active</span>
-                <span class="budget-label">ID: {{ dept.id }}</span>
+                <span class="budget-label">No: {{ index + 1 }}</span>
               </div>
             </div>
           </div>
@@ -110,9 +110,9 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="dept in filtered" :key="dept.id">
+                <tr v-for="(dept, index) in filtered" :key="dept.id">
                   <td>
-                    <span class="emp-id">#{{ dept.id }}</span>
+                    <span class="emp-id">{{ index + 1 }}</span>
                   </td>
                   <td>
                     <span

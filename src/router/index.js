@@ -1,6 +1,7 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import Settings from '@/views/settings/SettingsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -13,31 +14,26 @@ const router = createRouter({
     },
     {
       path: '/',
-      // 💡 ជំនួសឱ្យការកំណត់រុញទៅ /dashboard ងងឹតងងល់ ពួកយើងទុកឱ្យ beforeEach ខាងក្រោមជាអ្នកបែងចែកផ្លូវវិញ
-      redirect: to => {
-        const token = localStorage.getItem('token')
-        const userRole = localStorage.getItem('user_role')
-
-        if (!token) return '/login'
-        if (userRole === 'Admin') return '/admin/dashboard'
-        return '/dashboard'
-      }
+      // 💡 ជំនួសឱ្យការកំណត់រុញទៅកាន់ទំព័រចៃដន្យ ទុកឱ្យគណនេយ្យភាពរបស់ authStore សម្រេចចិត្ត
+      redirect: () => {
+        const auth = useAuthStore()
+        if (!auth.isAuthenticated) return '/login'
+        return auth.homeRoute
+      },
     },
     {
       path: '/dashboard',
       name: 'dashboard',
       component: () => import('@/views/dashboard/Dashboard.vue'),
-      meta: { requiresAuth: true },
-      // 🔄 មុខងារពិសេស៖ ឆែកសិទ្ធិមុននឹងបើកទ្វារឱ្យចូលទំព័រ Dashboard របស់ HR
-      beforeEnter: (to, from, next) => {
-        const userRole = localStorage.getItem('user_role')
-        // 👑 បើរកឃើញក្នុង LocalStorage ថាជា Admin ពិតមែន គឺបង្វែរផ្លូវទៅផ្ទាំង Admin Dashboard ភ្លាម!
-        if (userRole === 'Admin') {
-          next('/admin/dashboard')
-        } else {
-          next()
+      children: [
+        {
+          path: 'settings',
+          name: 'Settings',
+          component: Settings // The page content
         }
-      }
+      ],
+      // Now Admin and HR can both access this route
+      meta: { requiresAuth: true, role: ['HR', 'Admin'] },
     },
     {
       path: '/employees',
@@ -86,12 +82,11 @@ const router = createRouter({
       name: 'ScanAttendance',
       component: () => import('@/views/attendance/ScanAttendance.vue'),
     },
-
-{
-  path: '/public/scan',
-  name: 'PublicScan',
-  component: () => import('@/views/attendance/ScanAttendance.vue')
-},
+    {
+      path: '/public/scan',
+      name: 'PublicScan',
+      component: () => import('@/views/attendance/ScanAttendance.vue'),
+    },
     {
       path: '/leave',
       name: 'leave',
@@ -122,58 +117,68 @@ const router = createRouter({
       component: () => import('@/views/reports/ReportsDashboard.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/reports/:type',
+      name: 'report-detail',
+      component: () => import('@/views/reports/ReportDetail.vue'),
+      meta: { requiresAuth: true },
+    },
 
     //  ─── SUPER ADMIN CHANNELS ───
     {
       path: '/admin/dashboard',
       name: 'admin-dashboard',
       component: () => import('@/views/admin/AdminDashboard.vue'),
-      meta: { requiresAuth: true, role: 'Admin' }
+      meta: { requiresAuth: true, role: 'Admin' },
     },
     {
       path: '/manage-hr',
       name: 'manage-hr',
       component: () => import('@/views/admin/ManageHRAccounts.vue'),
-      meta: { requiresAuth: true, role: 'Admin' }
-    }
+      meta: { requiresAuth: true, role: 'Admin' },
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('@/views/settings/SettingsView.vue'),
+      meta: { requiresAuth: true },
+    },
 
+    // ─── CATCH-ALL 404 ───
+    // Any unknown path (typos, refresh on a removed route) falls back to the
+    // root resolver, which sends guests to /login and users to their home page.
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      redirect: '/',
+    },
   ],
 })
 
 // ===================================================================
-// NAVIGATION GUARD ជួសជុលថ្មី (រឹងមាំ និងឆ្លាតវៃបំផុត)
+// CENTRAL NAVIGATION GUARD
+// គ្រប់គ្រងសិទ្ធិចូលប្រើប្រាស់ និងការបង្វែរផ្លូវផ្អែកលើស្ថានភាពពិតរបស់ authStore
 // ===================================================================
-router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore()
+router.beforeEach((to) => {
+  const auth = useAuthStore()
 
-  // ចាប់យកទិន្នន័យផ្ទាល់ពី LocalStorage ការពារការបាត់បង់ Role ពេល Refresh ទំព័រ
-  const token = localStorage.getItem('token')
-  const userRole = localStorage.getItem('user_role')
-
-  // ១. បើទំព័រនោះត្រូវការ Login (requiresAuth) តែគ្មានសោរ Token ផ្ញើមកទេ ➔ រុញទៅទំព័រ Login ភ្លាម!
-  if (to.meta.requiresAuth && !token) {
-    return next('/login')
+  // ១. បើទំព័រនោះត្រូវការ Login (requiresAuth) តែមិនទាន់បានផ្ទៀងផ្ទាត់ ➔ រុញទៅ Login
+  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    return '/login'
   }
 
-  // ២. បើមានសោរ Login រួចរាល់ហើយ តែចង់ព្យាយាមចូលទៅកាន់ទំព័រ Login សារជាថ្មី
-  if (to.meta.requiresGuest && token) {
-    if (userRole === 'Admin') {
-      return next('/admin/dashboard')
-    }
-    return next('/dashboard')
+  // ២. បើមានសោរ Login រួចរាល់ហើយ តែចង់ព្យាយាមចូលទៅកាន់ទំព័រ Guest (e.g. /login) ➔ បោះទៅទំព័រដើមតាម Role
+  if (to.meta.requiresGuest && auth.isAuthenticated) {
+    return auth.homeRoute
   }
 
-  // ៣. បើគាត់បើកចំលីង /dashboard ធម្មតា ប៉ុន្តែតួនាទីជា Admin ➔ បង្វែរផ្លូវទៅកាន់ផ្ទាំង Admin ភ្លាម
-  if (to.path === '/dashboard' && userRole === 'Admin') {
-    return next('/admin/dashboard')
+  // ៣. ប្រព័ន្ធការពារសិទ្ធិ Role Gate (RBAC)៖ បើចូលទំព័រខុសពីតួនាទីខ្លួនឯង ➔ បញ្ជូនត្រឡប់ទៅទំព័រដើមវិញ
+  if (auth.isAuthenticated && to.meta.role && !auth.canAccess(to.meta.role)) {
+    return auth.homeRoute
   }
 
-  // ៤. ខ្សែការពារដេញជើងសិទ្ធិដាច់ណាត់ (RBAC)៖ បើទំព័ររបស់ Admin តែអ្នកលួចចូលជា HR ➔ ទាត់ចេញភ្លាម!
-  if (to.meta.role && to.meta.role !== userRole) {
-    return next('/dashboard')
-  }
-
-  next() // ដើរចូលទំព័រដោយជោគជ័យ
+  // អនុញ្ញាតឱ្យឆ្លងកាត់ដោយជោគជ័យ
+  return true
 })
 
 export default router
