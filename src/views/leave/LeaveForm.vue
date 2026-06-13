@@ -3,11 +3,13 @@
     <div class="leave-form-container">
       <div class="page-header">
         <div>
-          <h1 class="page-title"><i class="fas fa-calendar-day me-2 text-gradient"></i>Apply for Leave</h1>
+          <h1 class="page-title">
+            <VsxIcon iconName="Calendar1" :size="18" class="me-2 text-gradient" />Apply for Leave
+          </h1>
           <p class="page-sub">Submit a leave request for approval</p>
         </div>
         <router-link to="/leave" class="btn-outline">
-          <i class="fas fa-arrow-left"></i> Back to Leave
+          <VsxIcon iconName="ArrowLeft" :size="18" /> Back to Leave
         </router-link>
       </div>
 
@@ -15,35 +17,29 @@
         <div class="dark-card form-card">
           <h3 class="card-title">Leave Request Details</h3>
           <form @submit.prevent="submitLeave" class="leave-form">
-            
             <div class="form-field">
               <label>Select Employee *</label>
-              <select 
-                v-model="form.employee_id" 
-                class="dark-select" 
-                required 
-                style="width: 100%; padding: 0.65rem 0.9rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); border-radius: 9px; color: white; outline: none;"
-              >
-                <option value="" style="color: #111; background: #fff;">-- Choose Employee --</option>
-                <option 
-                  v-for="emp in employees" 
-                  :key="emp.id" 
-                  :value="emp.id"
-                  style="color: #111; background: #fff;" 
-                >
+              <select v-model="form.employee_id" class="light-select" required>
+                <option value="">-- Choose Employee --</option>
+                <option v-for="emp in employees" :key="emp.id" :value="emp.id">
                   {{ emp.employee_code }} : {{ emp.first_name }} {{ emp.last_name }}
                 </option>
               </select>
-          </div>
+            </div>
 
             <div class="form-field">
               <label>Leave Type *</label>
               <div class="type-picker">
                 <div
-                  v-for="lt in leaveTypes" :key="lt.value"
+                  v-for="lt in leaveTypes"
+                  :key="lt.value"
                   class="type-option"
                   :class="{ selected: form.leave_type === lt.value }"
-                  :style="form.leave_type === lt.value ? { borderColor: lt.color, background: lt.color + '18' } : {}"
+                  :style="
+                    form.leave_type === lt.value
+                      ? { borderColor: lt.color, background: lt.color + '12' }
+                      : {}
+                  "
                   @click="form.leave_type = lt.value"
                 >
                   <span class="type-dot" :style="{ background: lt.color }"></span>
@@ -59,36 +55,63 @@
               </div>
               <div class="form-field">
                 <label>To Date *</label>
-                <input type="date" v-model="form.to_date" :min="form.start_date" required @change="calcDays" />
+                <input
+                  type="date"
+                  v-model="form.to_date"
+                  :min="form.start_date"
+                  required
+                  @change="calcDays"
+                />
               </div>
             </div>
 
             <div class="days-display" v-if="displayDays > 0">
-              <i class="fas fa-calendar-day"></i>
-              <strong>{{ displayDays }}</strong> working day{{ displayDays > 1 ? 's' : '' }} selected
+              <VsxIcon iconName="Calendar1" :size="18" />
+              <strong>{{ displayDays }}</strong> working day{{ displayDays > 1 ? 's' : '' }}
+              selected
             </div>
 
             <div class="form-field">
               <label>Reason *</label>
-              <textarea v-model="form.reason" rows="4" placeholder="Please explain the reason for your leave request..." required></textarea>
+              <textarea
+                v-model="form.reason"
+                rows="4"
+                placeholder="Please explain the reason for your leave request..."
+                required
+              ></textarea>
             </div>
 
             <div class="form-field">
               <label>Supporting Document</label>
-              <div class="file-upload-area" @click="triggerFileInput" @dragover.prevent @drop.prevent="handleDrop">
-                <i class="fas fa-cloud-upload-alt"></i>
+              <div
+                class="file-upload-area"
+                @click="triggerFileInput"
+                @dragover.prevent
+                @drop.prevent="handleDrop"
+              >
+                <VsxIcon iconName="CloudPlus" :size="36" />
                 <p>Drag & drop or <span class="click-link">click to upload</span></p>
                 <p class="file-hint">PDF, JPG, PNG up to 5MB</p>
                 <p class="file-name" v-if="fileName">{{ fileName }}</p>
               </div>
-              <input type="file" ref="fileInput" style="display:none" @change="handleFile" accept=".pdf,.jpg,.jpeg,.png" />
+              <input
+                type="file"
+                ref="fileInput"
+                style="display: none"
+                @change="handleFile"
+                accept=".pdf,.jpg,.jpeg,.png"
+              />
             </div>
 
             <div class="form-actions">
               <router-link to="/leave" class="btn-outline">Cancel</router-link>
-              <button type="submit" class="btn-primary" :disabled="leaveStore.loading || displayDays <= 0">
+              <button
+                type="submit"
+                class="btn-primary"
+                :disabled="leaveStore.loading || displayDays <= 0"
+              >
                 <span v-if="leaveStore.loading" class="spinner-sm"></span>
-                <i v-else class="fas fa-paper-plane me-2"></i>
+                <VsxIcon iconName="Send2" :size="18" class="me-2" v-else />
                 Submit Leave Request
               </button>
             </div>
@@ -100,7 +123,9 @@
             <h4 class="info-title">Leave Policy</h4>
             <div class="policy-row">
               <span class="policy-label">Type</span>
-              <span class="policy-val" :style="{ color: selectedType.color }">{{ selectedType.name }}</span>
+              <span class="policy-val" :style="{ color: selectedType.color }">{{
+                selectedType.name
+              }}</span>
             </div>
             <div class="policy-row">
               <span class="policy-label">Max Days/Year</span>
@@ -108,14 +133,19 @@
             </div>
             <div class="policy-row">
               <span class="policy-label">Carry Forward</span>
-              <span class="policy-val" :class="selectedType.carry_forward ? 'text-green' : 'text-red'">
+              <span
+                class="policy-val"
+                :class="selectedType.carry_forward ? 'text-green' : 'text-red'"
+              >
                 {{ selectedType.carry_forward ? 'Yes' : 'No' }}
               </span>
             </div>
           </div>
 
           <div class="dark-card info-card">
-            <h4 class="info-title"><i class="fas fa-lightbulb me-2" style="color:#fbbf24"></i>Tips</h4>
+            <h4 class="info-title">
+              <VsxIcon iconName="Lamp" :size="18" class="me-2" style="color: #d97706" />Tips
+            </h4>
             <ul class="tips-list">
               <li>Submit your request at least <strong>3 days</strong> in advance</li>
               <li>Emergency leave can be submitted on the same day</li>
@@ -128,7 +158,12 @@
             <h4 class="info-title">Request Preview</h4>
             <div class="preview-item">
               <span class="preview-label">Type</span>
-              <span class="type-pill" v-if="selectedType" :style="{ background: selectedType.color + '18', color: selectedType.color }">{{ selectedType.name }}</span>
+              <span
+                class="type-pill"
+                v-if="selectedType"
+                :style="{ background: selectedType.color + '12', color: selectedType.color }"
+                >{{ selectedType.name }}</span
+              >
             </div>
             <div class="preview-item" v-if="form.start_date">
               <span class="preview-label">From</span>
@@ -140,13 +175,14 @@
             </div>
             <div class="preview-item">
               <span class="preview-label">Duration</span>
-              <span class="preview-val highlight">{{ displayDays }} day{{ displayDays !== 1 ? 's' : '' }}</span>
+              <span class="preview-val highlight"
+                >{{ displayDays }} day{{ displayDays !== 1 ? 's' : '' }}</span
+              >
             </div>
           </div>
         </div>
       </div>
     </div>
-    
   </MainLayout>
 </template>
 
@@ -167,24 +203,24 @@ const fileName = ref('')
 const displayDays = ref(0)
 
 const leaveTypes = ref([
-  { name: 'Annual Leave', value: 'annual', color: '#6823ff', max_days: 18, carry_forward: true },
-  { name: 'Sick Leave', value: 'sick', color: '#40c8da', max_days: 7, carry_forward: false },
-  { name: 'Casual Leave', value: 'casual', color: '#fbbf24', max_days: 5, carry_forward: false }
+  { name: 'Annual Leave', value: 'annual', color: '#4f7cff', max_days: 18, carry_forward: true },
+  { name: 'Sick Leave', value: 'sick', color: '#0284c7', max_days: 7, carry_forward: false },
+  { name: 'Casual Leave', value: 'casual', color: '#d97706', max_days: 5, carry_forward: false },
 ])
 
 const form = reactive({
   employee_id: '',
-  leave_type: 'annual', 
-  start_date: '',       
+  leave_type: 'annual',
+  start_date: '',
   to_date: '',
-  reason: ''
+  reason: '',
 })
 
 const employees = computed(() => {
   return employeeStore.employees || employeeStore.employeeList || []
 })
 
-const selectedType = computed(() => leaveTypes.value.find(lt => lt.value === form.leave_type))
+const selectedType = computed(() => leaveTypes.value.find((lt) => lt.value === form.leave_type))
 
 const calcDays = () => {
   if (form.start_date && form.to_date) {
@@ -193,10 +229,21 @@ const calcDays = () => {
   }
 }
 
-const formatDate = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''
+const formatDate = (d) =>
+  d
+    ? new Date(d + 'T00:00:00').toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : ''
 const triggerFileInput = () => fileInput.value?.click()
-const handleFile = (e) => { fileName.value = e.target.files[0]?.name || '' }
-const handleDrop = (e) => { fileName.value = e.dataTransfer.files[0]?.name || '' }
+const handleFile = (e) => {
+  fileName.value = e.target.files[0]?.name || ''
+}
+const handleDrop = (e) => {
+  fileName.value = e.dataTransfer.files[0]?.name || ''
+}
 
 async function submitLeave() {
   if (!form.employee_id) {
@@ -208,8 +255,8 @@ async function submitLeave() {
     employee_id: form.employee_id,
     leave_type: form.leave_type,
     start_date: form.start_date,
-    end_date: form.to_date, 
-    reason: form.reason
+    end_date: form.to_date,
+    reason: form.reason,
   }
 
   const res = await leaveStore.createLeaveRequest(payload)
@@ -223,84 +270,385 @@ async function submitLeave() {
 
 onMounted(async () => {
   await employeeStore.fetchEmployees()
-  
-  console.log("=== CHECK EMPLOYEE STORE DATA ===")
-  console.log(JSON.parse(JSON.stringify(employeeStore)))
 })
 </script>
 
 <style scoped>
-.leave-form-container { padding: 1.5rem; max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem; }
-.page-header { display: flex; justify-content: space-between; align-items: flex-start; }
-.page-title { font-size: 1.6rem; font-weight: 700; color: rgba(255,255,255,0.92); margin: 0 0 0.3rem; }
-.page-sub { font-size: 0.83rem; color: rgba(255,255,255,0.35); margin: 0; }
-.text-gradient { background: linear-gradient(135deg, #a47bff, #40c8da); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.btn-primary { display: inline-flex; align-items: center; gap: 7px; padding: 0.6rem 1.2rem; background: linear-gradient(135deg, #6823ff, #4f0fdb); border: none; border-radius: 10px; color: white; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 20px rgba(104,35,255,0.35); }
-.btn-primary:hover:not(:disabled) { opacity: 0.9; }
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-.btn-outline { display: inline-flex; align-items: center; gap: 7px; padding: 0.55rem 1.1rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 9px; color: rgba(255,255,255,0.6); font-size: 0.83rem; cursor: pointer; transition: all 0.2s; text-decoration: none; }
-.btn-outline:hover { background: rgba(255,255,255,0.1); }
+/* Structural Canvas & Core Frame Layout */
+.leave-form-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  font-family:
+    'Plus Jakarta Sans',
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
 
-.form-layout { display: grid; grid-template-columns: 1fr 320px; gap: 1.25rem; }
-.dark-card { background: #0d0d1a; border: 1px solid rgba(104,35,255,0.13); border-radius: 18px; padding: 1.5rem; }
-.card-title { font-size: 0.95rem; font-weight: 700; color: rgba(255,255,255,0.85); margin: 0 0 1.5rem; }
-.leave-form { display: flex; flex-direction: column; gap: 1.25rem; }
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.25rem 0;
+}
+.page-sub {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0;
+}
+.text-gradient {
+  background: linear-gradient(135deg, var(--accent), #0284c7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
-.form-field { display: flex; flex-direction: column; gap: 7px; }
-.form-field label { font-size: 0.78rem; font-weight: 600; color: rgba(255,255,255,0.5); }
-.form-field input, .form-field textarea { padding: 0.65rem 0.9rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); border-radius: 9px; color: rgba(255,255,255,0.85); font-size: 0.85rem; outline: none; font-family: inherit; }
-.form-field input:focus, .form-field textarea:focus { border-color: rgba(104,35,255,0.5); background: rgba(104,35,255,0.07); }
-.form-field textarea { resize: vertical; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+/* Control Action Buttons */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.65rem 1.25rem;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.25);
+}
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 6px 18px rgba(var(--accent-rgb), 0.35);
+  transform: translateY(-1px);
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
 
-.type-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.6rem; }
-.type-option { display: flex; align-items: center; gap: 8px; padding: 0.6rem 0.85rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 9px; cursor: pointer; transition: all 0.2s; font-size: 0.82rem; color: rgba(255,255,255,0.6); }
-.type-option:hover { background: rgba(255,255,255,0.08); }
-.type-option.selected { color: rgba(255,255,255,0.9); font-weight: 600; }
-.type-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.6rem 1.2rem;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  color: #334155;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.btn-outline:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
 
-.days-display { display: flex; align-items: center; gap: 8px; padding: 0.75rem 1rem; background: rgba(104,35,255,0.1); border: 1px solid rgba(104,35,255,0.25); border-radius: 10px; color: #a47bff; font-size: 0.85rem; }
-.days-display strong { font-size: 1.1rem; }
-.days-display i { font-size: 1rem; }
+/* Two-Column Form Container Layout */
+.form-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 1.5rem;
+}
+.dark-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow:
+    0 4px 6px -1px rgba(15, 23, 42, 0.03),
+    0 2px 4px -1px rgba(15, 23, 42, 0.02);
+}
+.card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 1.5rem;
+}
+.leave-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
 
-.file-upload-area { border: 2px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.2s; color: rgba(255,255,255,0.35); }
-.file-upload-area:hover { border-color: rgba(104,35,255,0.4); background: rgba(104,35,255,0.05); }
-.file-upload-area i { font-size: 2rem; margin-bottom: 0.5rem; color: rgba(255,255,255,0.25); }
-.file-upload-area p { margin: 0; font-size: 0.83rem; }
-.click-link { color: #a47bff; font-weight: 600; }
-.file-hint { font-size: 0.72rem !important; color: rgba(255,255,255,0.2) !important; margin-top: 4px !important; }
-.file-name { font-size: 0.78rem !important; color: #34d399 !important; margin-top: 6px !important; }
+/* Input Form Controls Framework */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-field label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+}
+.form-field input,
+.form-field textarea,
+.light-select {
+  padding: 0.65rem 0.9rem;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  color: #0f172a;
+  font-size: 0.9rem;
+  outline: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+.form-field input:focus,
+.form-field textarea:focus,
+.light-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
+}
+.form-field textarea {
+  resize: vertical;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
 
-.form-actions { display: flex; justify-content: flex-end; gap: 0.75rem; padding-top: 0.5rem; }
+/* Form Component Pickers */
+.type-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.75rem;
+}
+.type-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.65rem 0.85rem;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  color: #475569;
+  font-weight: 500;
+}
+.type-option:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+.type-option.selected {
+  color: #0f172a;
+  font-weight: 700;
+  border-width: 1px;
+}
+.type-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
 
-/* Info panel */
-.info-panel { display: flex; flex-direction: column; gap: 1rem; }
-.info-card { padding: 1.25rem; }
-.info-title { font-size: 0.85rem; font-weight: 700; color: rgba(255,255,255,0.75); margin: 0 0 1rem; }
-.policy-row { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-.policy-row:last-child { border-bottom: none; }
-.policy-label { font-size: 0.78rem; color: rgba(255,255,255,0.4); }
-.policy-val { font-size: 0.82rem; font-weight: 600; color: rgba(255,255,255,0.75); }
-.text-green { color: #34d399 !important; }
-.text-red { color: #f87171 !important; }
+.days-display {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.85rem 1.25rem;
+  background: #eeebff;
+  border: 1px solid rgba(var(--accent-rgb), 0.2);
+  border-radius: 12px;
+  color: #5215e6;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.days-display strong {
+  font-size: 1.15rem;
+  color: var(--accent);
+}
 
-.tips-list { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; }
-.tips-list li { font-size: 0.78rem; color: rgba(255,255,255,0.45); }
-.tips-list strong { color: rgba(255,255,255,0.7); }
+/* Document Attachment Area */
+.file-upload-area {
+  border: 2px dashed #cbd5e1;
+  border-radius: 14px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #64748b;
+  background: #f8fafc;
+}
+.file-upload-area:hover {
+  border-color: var(--accent);
+  background: #f5f3ff;
+  color: #0f172a;
+}
+.file-upload-area :deep(svg) {
+  margin-bottom: 0.5rem;
+  color: #94a3b8;
+}
+.file-upload-area:hover :deep(svg) {
+  color: var(--accent);
+}
+.file-upload-area p {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+.click-link {
+  color: var(--accent);
+  font-weight: 700;
+}
+.file-hint {
+  font-size: 0.75rem !important;
+  color: #94a3b8 !important;
+  margin-top: 4px !important;
+}
+.file-name {
+  font-size: 0.825rem !important;
+  color: #15803d !important;
+  font-weight: 600;
+  margin-top: 8px !important;
+}
 
-.preview-card {}
-.preview-item { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-.preview-item:last-child { border-bottom: none; }
-.preview-label { font-size: 0.73rem; color: rgba(255,255,255,0.35); }
-.preview-val { font-size: 0.82rem; color: rgba(255,255,255,0.75); font-weight: 500; }
-.preview-val.highlight { color: #a47bff; font-weight: 700; }
-.type-pill { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e2e8f0;
+}
 
-.spinner-sm { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; margin-right: 6px; }
-.me-2 { margin-right: 0.5rem; }
-@keyframes spin { to { transform: rotate(360deg); } }
+/* Metrics & Policy Panel */
+.info-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.info-card {
+  padding: 1.25rem 1.5rem;
+}
+.info-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #475569;
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.policy-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+.policy-row:last-child {
+  border-bottom: none;
+}
+.policy-label {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+.policy-val {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+.text-green {
+  color: #16a34a !important;
+}
+.text-red {
+  color: #dc2626 !important;
+}
+
+.tips-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.tips-list li {
+  font-size: 0.85rem;
+  color: #475569;
+  line-height: 1.4;
+}
+.tips-list strong {
+  color: #0f172a;
+}
+
+/* Real-time Preview Card Components */
+.preview-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+.preview-item:last-child {
+  border-bottom: none;
+}
+.preview-label {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+.preview-val {
+  font-size: 0.875rem;
+  color: #1e293b;
+  font-weight: 600;
+}
+.preview-val.highlight {
+  color: var(--accent);
+  font-weight: 800;
+}
+.type-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Runtime Load Spinners */
+.spinner-sm {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+  margin-right: 6px;
+}
+.me-2 {
+  margin-right: 0.5rem;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 @media (max-width: 900px) {
-  .form-layout { grid-template-columns: 1fr; }
+  .form-layout {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

@@ -1,17 +1,18 @@
 <template>
   <MainLayout>
     <div class="admin-dashboard-layout">
-      
       <div class="page-header fade-in">
         <div class="header-text">
           <h1 class="page-title">
-            <i class="fas fa-user-shield me-2 icon-gradient"></i>
+            <VsxIcon iconName="SecurityUser" :size="18" class="me-2 icon-gradient" />
             <span class="text-gradient">HR Accounts Management</span>
           </h1>
-          <p class="page-subtitle text-muted">Create, monitor, and control system access for HR operators.</p>
+          <p class="page-subtitle text-muted">
+            Create, monitor, and control system access for HR operators.
+          </p>
         </div>
         <button class="btn-create" @click="openCreateModal">
-          <i class="fas fa-user-plus me-2"></i> Register New HR
+          <VsxIcon iconName="UserAdd" :size="18" class="me-2" /> Register New HR
         </button>
       </div>
 
@@ -30,41 +31,53 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="hr in hrUsers" :key="hr.id">
-                <td>#{{ hr.id }}</td>
+              <tr v-for="(hr, index) in hrUsers" :key="hr.id">
+                <td>{{ index + 1 }}</td>
                 <td class="user-fullname">{{ hr.first_name }} {{ hr.last_name }}</td>
                 <td>{{ hr.email }}</td>
                 <td>
                   <span class="badge-role" :class="hr.role === 'Admin' ? 'role-admin' : 'role-hr'">
-                    <i :class="hr.role === 'Admin' ? 'fas fa-crown' : 'fas fa-user-tie'"></i>
+                    <VsxIcon :iconName="hr.role === 'Admin' ? 'Crown' : 'UserTag'" :size="18" />
                     {{ hr.role }}
                   </span>
                 </td>
                 <td>
-                  <span class="status-badge" :class="hr.status === 'Active' ? 'status-active' : 'status-inactive'">
-                    <i class="fas fa-circle me-1" style="font-size: 0.5rem"></i>
+                  <span
+                    class="status-badge"
+                    :class="hr.status === 'Active' ? 'status-active' : 'status-inactive'"
+                  >
+                    <VsxIcon iconName="Record" :size="8" class="me-1" />
                     {{ hr.status }}
                   </span>
                 </td>
                 <td>{{ new Date(hr.created_at).toLocaleDateString('km-KH') }}</td>
                 <td class="text-center">
-                  <button 
-                    class="btn-action-toggle me-2" 
+                  <button
+                    class="btn-action-toggle me-2"
                     :class="hr.status === 'Active' ? 'deactivate-mode' : 'activate-mode'"
                     @click="handleToggleStatus(hr.id, hr.status)"
                     :disabled="hr.role === 'Admin'"
                   >
-                    <i :class="hr.status === 'Active' ? 'fas fa-user-slash' : 'fas fa-user-check'"></i>
+                    <VsxIcon
+                      :iconName="hr.status === 'Active' ? 'UserRemove' : 'UserTick'"
+                      :size="18"
+                    />
                     {{ hr.status === 'Active' ? ' Deactivate' : ' Activate' }}
                   </button>
 
-                  <button class="btn-action-delete" @click="handleDeleteUser(hr.id)" :disabled="hr.role === 'Admin'">
-                    <i class="fas fa-trash-alt"></i>
+                  <button
+                    class="btn-action-delete"
+                    @click="handleDeleteUser(hr.id)"
+                    :disabled="hr.role === 'Admin'"
+                  >
+                    <VsxIcon iconName="Trash" :size="18" />
                   </button>
                 </td>
               </tr>
               <tr v-if="hrUsers.length === 0">
-                <td colspan="7" class="text-center text-muted py-4">No HR operators found in the database.</td>
+                <td colspan="7" class="text-center text-muted py-4">
+                  No HR operators found in the database.
+                </td>
               </tr>
             </tbody>
           </table>
@@ -72,10 +85,15 @@
       </div>
 
       <div v-if="showModal" class="modal-overlay">
-        <div class="glass-modal">
+        <div class="light-modal">
           <div class="modal-header">
-            <h3><i class="fas fa-user-plus me-2 text-purple"></i> Register HR Operator</h3>
-            <button class="btn-close" @click="closeModal"><i class="fas fa-times"></i></button>
+            <h3>
+              <VsxIcon iconName="UserAdd" :size="18" class="me-2 text-purple" /> Register HR
+              Operator
+            </h3>
+            <button class="btn-close" @click="closeModal">
+              <VsxIcon iconName="CloseCircle" :size="18" />
+            </button>
           </div>
 
           <form @submit.prevent="submitCreateHR" class="mt-3">
@@ -91,11 +109,23 @@
             </div>
             <div class="mb-3">
               <label class="form-label-custom">Email Address</label>
-              <input type="email" v-model="form.email" class="form-input-custom" placeholder="example@hr.com" required />
+              <input
+                type="email"
+                v-model="form.email"
+                class="form-input-custom"
+                placeholder="example@hr.com"
+                required
+              />
             </div>
             <div class="mb-4">
               <label class="form-label-custom">Account Password</label>
-              <input type="password" v-model="form.password" class="form-input-custom" placeholder="Minimum 6 characters" required />
+              <input
+                type="password"
+                v-model="form.password"
+                class="form-input-custom"
+                placeholder="Minimum 6 characters"
+                required
+              />
             </div>
 
             <div class="d-flex justify-content-end gap-2">
@@ -110,12 +140,11 @@
     </div>
   </MainLayout>
 </template>
-
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import axios from 'axios'
 import Swal from 'sweetalert2'
 import MainLayout from '@/components/layouts/MainLayout.vue'
+import api from '@/services/api'
 
 const hrUsers = ref([])
 const showModal = ref(false)
@@ -125,24 +154,33 @@ const form = reactive({
   first_name: '',
   last_name: '',
   email: '',
-  password: ''
+  password: '',
 })
 
+// 1. LOAD ALL USER ACCOUNTS FROM THE BACKEND (GET /api/auth/users-list)
 const fetchHRUsers = async () => {
   try {
-    const token = localStorage.getItem('token')
-    const res = await axios.get('http://localhost:8001/api/auth/users-list', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
+    const res = await api.get('/api/auth/users-list')
     if (res.data.success) {
-      hrUsers.value = res.data.data
+      hrUsers.value = res.data.data || []
     }
   } catch (err) {
-    console.error('Failed to load users:', err)
+    console.error('Failed to load HR users:', err.response?.data || err.message)
+    Swal.fire({
+      icon: 'error',
+      title: 'Could not load accounts',
+      text: err.response?.data?.message || 'Unable to reach the server.',
+      background: '#ffffff',
+      color: '#1a1a1a',
+      confirmButtonColor: '#4f7cff',
+    })
   }
 }
 
-const openCreateModal = () => { showModal.value = true }
+const openCreateModal = () => {
+  showModal.value = true
+}
+
 const closeModal = () => {
   showModal.value = false
   form.first_name = ''
@@ -151,123 +189,390 @@ const closeModal = () => {
   form.password = ''
 }
 
+// 2. CREATE A REAL HR ACCOUNT (POST /api/auth/register-hr)
 const submitCreateHR = async () => {
   isSubmitting.value = true
   try {
-    const token = localStorage.getItem('token')
-    const payload = { ...form, role: 'HR' }
+    const payload = {
+      first_name: form.first_name,
+      last_name: form.last_name,
+      // Backend requires a username; derive a sensible default from the email.
+      username: form.email.split('@')[0],
+      email: form.email,
+      password: form.password,
+      role: 'HR',
+    }
 
-    const res = await axios.post('http://localhost:8001/api/auth/register-hr', payload, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-
+    const res = await api.post('/api/auth/register-hr', payload)
     if (res.data.success) {
       Swal.fire({
-        icon: 'success', title: 'HR Operator Registered!',
+        icon: 'success',
+        title: 'HR Operator Registered!',
         text: 'The new HR account has been successfully created and activated.',
-        background: '#110c26', color: '#fff', confirmButtonColor: '#6823ff'
+        background: '#ffffff',
+        color: '#1a1a1a',
+        confirmButtonColor: '#4f7cff',
       })
       closeModal()
-      fetchHRUsers()
+      await fetchHRUsers() // refresh from DB so the table reflects persisted data
     }
   } catch (err) {
     Swal.fire({
-      icon: 'error', title: 'Registration Failed',
+      icon: 'error',
+      title: 'Registration Failed',
       text: err.response?.data?.message || 'Something went wrong',
-      background: '#110c26', color: '#fff'
+      background: '#ffffff',
+      color: '#1a1a1a',
+      confirmButtonColor: '#4f7cff',
     })
   } finally {
     isSubmitting.value = false
   }
 }
 
+// 3. TOGGLE ACCOUNT ACCESS (PATCH /api/auth/user-status/{id})
 const handleToggleStatus = async (userId, currentStatus) => {
   const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active'
   const textAlert = newStatus === 'Active' ? 'activate' : 'deactivate'
 
   const confirmResult = await Swal.fire({
-    title: 'Are you sure?', text: `Do you want to ${textAlert} this HR account access?`,
-    icon: 'question', showCancelButton: true, confirmButtonColor: '#6823ff',
-    cancelButtonColor: 'rgba(255,255,255,0.1)', confirmButtonText: `Yes, ${textAlert}!`,
-    background: '#110c26', color: '#fff'
+    title: 'Are you sure?',
+    text: `Do you want to ${textAlert} this HR account access?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#4f7cff',
+    cancelButtonColor: '#e2e8f0',
+    confirmButtonText: `Yes, ${textAlert}!`,
+    background: '#ffffff',
+    color: '#1a1a1a',
   })
 
-  if (confirmResult.isConfirmed) {
-    try {
-      const token = localStorage.getItem('token')
-      const res = await axios.patch(`http://localhost:8001/api/auth/user-status/${userId}`, 
-        { status: newStatus }, { headers: { Authorization: `Bearer ${token}` } }
-      )
-      if (res.data.success) {
-        Swal.fire({ icon: 'success', title: 'Status Updated!', background: '#110c26', color: '#fff', confirmButtonColor: '#6823ff' })
-        fetchHRUsers()
-      }
-    } catch (err) {
-      Swal.fire({ title: 'Error', text: 'Failed to update status.', icon: 'error', background: '#110c26', color: '#fff' })
+  if (!confirmResult.isConfirmed) return
+
+  try {
+    const res = await api.patch(`/api/auth/user-status/${userId}`, { status: newStatus })
+    if (res.data.success) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Status Updated!',
+        background: '#ffffff',
+        color: '#1a1a1a',
+        confirmButtonColor: '#4f7cff',
+      })
+      await fetchHRUsers()
     }
+  } catch (err) {
+    Swal.fire({
+      title: 'Error',
+      text: err.response?.data?.message || 'Failed to update status.',
+      icon: 'error',
+      background: '#ffffff',
+      color: '#1a1a1a',
+      confirmButtonColor: '#4f7cff',
+    })
   }
 }
 
+// 4. DELETE AN ACCOUNT (DELETE /api/auth/user/{id})
 const handleDeleteUser = async (userId) => {
   const confirmResult = await Swal.fire({
-    title: 'Permanently Remove?', text: "This will completely delete the HR operator from the system!",
-    icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444',
-    cancelButtonColor: 'rgba(255,255,255,0.1)', confirmButtonText: 'Yes, delete it!',
-    background: '#110c26', color: '#fff'
+    title: 'Permanently Remove?',
+    text: 'This will completely delete the HR operator from the system!',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#e2e8f0',
+    confirmButtonText: 'Yes, delete it!',
+    background: '#ffffff',
+    color: '#1a1a1a',
   })
 
-  if (confirmResult.isConfirmed) {
-    try {
-      const token = localStorage.getItem('token')
-      await axios.delete(`http://localhost:8001/api/auth/user/${userId}`, { headers: { Authorization: `Bearer ${token}` } })
-      Swal.fire({ title: 'Removed!', icon: 'success', background: '#110c26', color: '#fff' })
-      fetchHRUsers()
-    } catch (err) {
-      Swal.fire({ title: 'Error', text: 'Failed to delete user.', icon: 'error', background: '#110c26', color: '#fff' })
-    }
+  if (!confirmResult.isConfirmed) return
+
+  try {
+    await api.delete(`/api/auth/user/${userId}`)
+    Swal.fire({
+      title: 'Removed!',
+      icon: 'success',
+      background: '#ffffff',
+      color: '#1a1a1a',
+      confirmButtonColor: '#4f7cff',
+    })
+    await fetchHRUsers()
+  } catch (err) {
+    Swal.fire({
+      title: 'Error',
+      text: err.response?.data?.message || 'Failed to delete user.',
+      icon: 'error',
+      background: '#ffffff',
+      color: '#1a1a1a',
+      confirmButtonColor: '#4f7cff',
+    })
   }
 }
 
-onMounted(() => { fetchHRUsers() })
+onMounted(() => {
+  fetchHRUsers()
+})
 </script>
-
 <style scoped>
-.admin-dashboard-layout { padding: 0.5rem; color: #fff; }
-.page-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
-.text-gradient { background: linear-gradient(135deg, #a47bff 0%, #40c8da 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.page-subtitle { color: rgba(255,255,255,0.5); font-size: 0.88rem; margin-top: 4px; }
+.admin-dashboard-layout {
+  padding: 0.5rem;
+  color: #1a1a1a;
+}
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.text-gradient {
+  background: linear-gradient(135deg, var(--accent-strong) 0%, #475569 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.icon-gradient {
+  color: var(--accent-strong);
+}
+.page-subtitle {
+  color: #64748b !important;
+  font-size: 0.88rem;
+  margin-top: 4px;
+}
 
-.btn-create { background: linear-gradient(135deg, #6823ff 0%, #8b5cf6 100%); border: none; color: #fff; padding: 10px 20px; font-weight: 600; border-radius: 10px; cursor: pointer; transition: 0.3s; }
-.btn-create:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(104,35,255,0.3); }
+.btn-create {
+  background: linear-gradient(135deg, var(--accent) 0%, #6f97ff 100%);
+  border: none;
+  color: #fff;
+  padding: 10px 20px;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.btn-create:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(var(--accent-rgb), 0.25);
+}
 
-.table-panel { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 1.5rem; }
-.management-table { width: 100%; border-collapse: collapse; }
-.management-table th { padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; }
-.management-table td { padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.88rem; color: rgba(255,255,255,0.7); }
-.user-fullname { color: #fff; font-weight: 600; }
+.table-panel {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.01),
+    0 2px 4px -1px rgba(0, 0, 0, 0.01);
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+.management-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.management-table th {
+  padding: 14px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  color: #64748b;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+.management-table td {
+  padding: 14px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  font-size: 0.88rem;
+  color: #334155;
+}
+.user-fullname {
+  color: #0f172a !important;
+  font-weight: 600;
+}
 
-.badge-role { padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
-.role-admin { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
-.role-hr { background: rgba(104, 35, 255, 0.15); color: #a47bff; }
+.badge-role {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.role-admin {
+  background: rgba(217, 119, 6, 0.12);
+  color: #b45309;
+}
+.role-hr {
+  background: rgba(var(--accent-rgb), 0.1);
+  color: var(--accent);
+}
 
-.status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; }
-.status-active { background: rgba(52, 211, 153, 0.12); color: #34d399; }
-.status-inactive { background: rgba(239, 68, 68, 0.12); color: #ef4444; }
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+}
+.status-active {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+.status-inactive {
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+}
 
-.btn-action-toggle { border: none; padding: 6px 14px; border-radius: 8px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
-.deactivate-mode { background: rgba(251, 191, 36, 0.1); color: #fbbf24; }
-.activate-mode { background: rgba(52, 211, 153, 0.1); color: #34d399; }
+.btn-action-toggle {
+  border: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.deactivate-mode {
+  background: rgba(217, 119, 6, 0.1);
+  color: #b45309;
+}
+.deactivate-mode:hover {
+  background: rgba(217, 119, 6, 0.18);
+}
+.activate-mode {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+.activate-mode:hover {
+  background: rgba(16, 185, 129, 0.18);
+}
 
-.btn-action-delete { border: none; background: transparent; color: #ef4444; padding: 6px 10px; cursor: pointer; border-radius: 6px; }
-.btn-action-delete:hover:not(:disabled) { background: rgba(239, 68, 68, 0.15); }
+.btn-action-delete {
+  border: none;
+  background: transparent;
+  color: #dc2626;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: 0.2s;
+}
+.btn-action-delete:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.08);
+}
 
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 1050; }
-.glass-modal { background: #0f0a22; border: 1px solid rgba(104, 35, 255, 0.2); border-radius: 20px; padding: 2rem; width: 100%; max-width: 500px; }
-.form-label-custom { color: rgba(255,255,255,0.6); font-size: 0.82rem; margin-bottom: 6px; display: block; }
-.form-input-custom { width: 100%; padding: 11px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; outline: none; }
-.btn-cancel { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 10px 20px; border-radius: 10px; cursor: pointer; }
-.btn-submit { background: #6823ff; border: none; color: #fff; padding: 10px 20px; border-radius: 10px; cursor: pointer; }
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.3);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+}
+.light-modal {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border-radius: 20px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 500px;
+}
+.light-modal h3 {
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin: 0;
+}
+.text-purple {
+  color: var(--accent) !important;
+}
+.btn-close {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: 0.2s;
+}
+.btn-close:hover {
+  color: #1a1a1a;
+}
 
-.fade-in { animation: fadeIn 0.3s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.form-label-custom {
+  color: #475569;
+  font-size: 0.82rem;
+  margin-bottom: 6px;
+  display: block;
+  font-weight: 500;
+}
+.form-input-custom {
+  width: 100%;
+  padding: 11px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  color: #1a1a1a;
+  outline: none;
+  transition: 0.2s;
+}
+.form-input-custom:focus {
+  background: #ffffff;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
+}
+.form-input-custom::placeholder {
+  color: #94a3b8;
+}
+
+.btn-cancel {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.2s;
+}
+.btn-cancel:hover {
+  background: #e2e8f0;
+  color: #1a1a1a;
+}
+.btn-submit {
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s;
+}
+.btn-submit:hover {
+  background: var(--accent-strong);
+  box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.2);
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 </style>

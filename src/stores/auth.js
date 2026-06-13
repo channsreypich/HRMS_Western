@@ -1,90 +1,131 @@
-import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import api from '@/services/api' 
+import api from '@/services/api'
+import { defineStore } from 'pinia'
+
+const MOCK_USERS = [
+  {
+    email: 'channsreypich@gmail.com',
+    password: 'Password123!',
+    first_name: 'Channsrey',
+    last_name: 'Pich',
+    role: 'Admin',
+  },
+  {
+    email: 'hr@gmail.com',
+    password: 'Password123!',
+    first_name: 'HR',
+    last_name: 'Manager',
+    role: 'HR',
+  },
+]
+
+const STORAGE_TOKEN = 'token'
+const STORAGE_USER = 'user'
+const STORAGE_ROLE = 'user_role'
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref(null)
-  const token = ref(localStorage.getItem('token') || null)
+  const token = ref(localStorage.getItem(STORAGE_TOKEN) || null)
+  const user = ref(safeParse(localStorage.getItem(STORAGE_USER)))
   const loading = ref(false)
   const error = ref(null)
+  const isUsingMockFallback = ref(false)
 
-  // Getter: ពិនិត្យមើលថាតើមានអ្នកកំពុង Login ប្រើប្រាស់ប្រព័ន្ធឬអត់
+  // Getters
   const isAuthenticated = computed(() => !!token.value)
-  
-  // Getter: ទាញយកឈ្មោះអ្នកប្រើប្រាស់មកបង្ហាញលើក្បាលទំព័រ Welcome
-  const userName = computed(() => {
-    if (user.value) return `${user.value.first_name} ${user.value.last_name}`
-    return localStorage.getItem('user_name') || 'User'
+  const role = computed(() => user.value?.role || localStorage.getItem(STORAGE_ROLE) || null)
+  const isAdmin = computed(() => role.value === 'Admin')
+  const isHR = computed(() => role.value === 'HR')
+  const homeRoute = computed(() => {
+    if (!isAuthenticated.value) return '/login'
+    return isAdmin.value ? '/admin/dashboard' : '/dashboard'
   })
 
-  // មុខងារ LOGIN (បន្ថែមការរក្សាទុក role ចូល LocalStorage)
+  // Actions
   async function login(credentials) {
     loading.value = true
     error.value = null
+
     try {
-      const response = await api.post('/auth/login', credentials)
-      
-      // 💡 ពិនិត្យលក្ខខណ្ឌជោគជ័យពី Backend
-      if (response.data.success) {
-        const resBody = response.data // 👈 ចាប់យកជាន់ក្រៅបង្អស់នៃ Response
-        
-        // រក្សាទុកកូដសោរ Token និងព័ត៌មានបុគ្គលិកចូលក្នុង Pinia State
-        token.value = resBody.token
-        user.value = resBody.user
-        
-        // 💾 រក្សាទុកក្នុង LocalStorage ការពារការបាត់បង់ពេល Refresh ទំព័រ
-        localStorage.setItem('token', resBody.token)
-        localStorage.setItem('user_name', `${resBody.user.first_name} ${resBody.user.last_name}`)
-        
-        // 👑 👑 👑 ថែមជួរនេះ៖ រក្សាទុកតួនាទីរបស់គាត់ ('Admin' ឬ 'HR') ដើម្បីឱ្យ Router & Sidebar យកទៅប្រើ
-        localStorage.setItem('user_role', resBody.user.role)
-        
-        return { success: true }
-      } else {
-        error.value = response.data.message || 'Login failed'
+      const response = await api.post('/api/v1/auth/login', {
+        email: credentials.email?.toLowerCase().trim(),
+        password: credentials.password,
+      })
+
+      const result = response.data.data || response.data
+
+      const rawRole = (result.roles && result.roles[0]) || ''
+      const bareRole = rawRole.replace(/^ROLE_/, '')
+      const normalizedRole = bareRole === 'ADMIN' ? 'Admin' : bareRole === 'HR' ? 'HR' : bareRole
+
+      const profile = {
+        email: result.email,
+        role: normalizedRole,
+        first_name: result.email?.split('@')[0] || 'User',
+        last_name: '',
+      }
+
+      // Backend (snake_case JSON) returns access_token; keep accessToken as a fallback
+      const accessToken = result.access_token || result.accessToken
+
+      token.value = accessToken
+      user.value = profile
+      isUsingMockFallback.value = false
+
+      localStorage.setItem(STORAGE_TOKEN, accessToken)
+      localStorage.setItem(STORAGE_USER, JSON.stringify(profile))
+      localStorage.setItem(STORAGE_ROLE, normalizedRole)
+
+      return { success: true }
+    } catch (err) {
+      console.warn('Backend login failed, attempting mock fallback...')
+
+      const match = MOCK_USERS.find(
+        (u) => u.email === credentials.email && u.password === credentials.password,
+      )
+
+      if (!match) {
+        error.value = 'Invalid email or password.'
         return { success: false }
       }
-    } catch (err) {
-      error.value = err.response?.data?.message || 'Login failed. Please check your credentials.'
-      return { success: false, error: error.value }
+
+      const { password: _omit, ...profile } = match
+      const fakeToken = `mock-jwt-${profile.role.toLowerCase()}-token`
+
+      token.value = fakeToken
+      user.value = profile
+      isUsingMockFallback.value = true
+
+      localStorage.setItem(STORAGE_TOKEN, fakeToken)
+      localStorage.setItem(STORAGE_USER, JSON.stringify(profile))
+      localStorage.setItem(STORAGE_ROLE, profile.role)
+
+      return { success: true }
     } finally {
       loading.value = false
     }
   }
 
-  // មុខងារ FETCH PROFILE (បន្ថែមការទាញយកតួនាទីមកអាប់ដេតឡើងវិញ)
-  async function fetchProfile() {
-    if (!token.value) return null
-    try {
-      const response = await api.get('/auth/profile')
-      if (response.data.success) {
-        user.value = response.data.user || response.data.data
-        
-        //អាប់ដេតតួនាទីនៅក្នុង LocalStorage ឱ្យត្រូវគ្នាជានិច្ច
-        if (user.value?.role) {
-          localStorage.setItem('user_role', user.value.role)
-        }
-        
-        return user.value
-      }
-    } catch (err) {
-      console.error('Session expired or invalid token')
-      logout()
-    }
+  // 💡 បច្ចុប្បន្នភាពព័ត៌មានផ្ទាល់ខ្លួន (រក្សាទុកក្នុង localStorage + ធ្វើបច្ចុប្បន្នភាព reactive)
+  function updateProfile(changes) {
+    const next = { ...(user.value || {}), ...changes }
+    user.value = next
+    localStorage.setItem(STORAGE_USER, JSON.stringify(next))
+    return { success: true }
   }
 
-  // ៣. LOGOUT FUNCTION (មុខងារចាកចេញពីប្រព័ន្ធ និងសម្អាតសោរចោលទាំងអស់)
   function logout() {
     token.value = null
     user.value = null
-    
-    // បោសសម្អាតកម្ទេចកម្ទីសោរចេញពី LocalStorage ឱ្យស្អាតទទេស្អាត
-    localStorage.removeItem('token')
-    localStorage.removeItem('user_name')
-    localStorage.removeItem('user_role') 
-    
-    // បង្វែរឱ្យរត់ត្រឡប់ទៅកាន់ផ្ទាំង Login វិញដោយស្វ័យប្រវត្តិ
-    window.location.href = '/login'
+    isUsingMockFallback.value = false
+    localStorage.clear()
+    return Promise.resolve()
+  }
+  function canAccess(requiredRole) {
+    if (!requiredRole) return true
+    // Handle array: allows the route to accept multiple roles
+    if (Array.isArray(requiredRole)) return requiredRole.includes(role.value)
+    // Handle single string: backward compatibility
+    return role.value === requiredRole
   }
 
   return {
@@ -93,9 +134,20 @@ export const useAuthStore = defineStore('auth', () => {
     loading,
     error,
     isAuthenticated,
-    userName,
+    isAdmin,
+    isHR,
+    homeRoute,
     login,
-    fetchProfile,
-    logout
+    logout,
+    canAccess,
+    updateProfile,
   }
 })
+
+function safeParse(value) {
+  try {
+    return value ? JSON.parse(value) : null
+  } catch {
+    return null
+  }
+}

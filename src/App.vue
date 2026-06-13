@@ -1,12 +1,19 @@
 <template>
-  <router-view />
+  <div class="app-container">
+    <RouterView />
+  </div>
+  <!--  <router-view />-->
 </template>
 
 <script setup>
 import { onMounted } from 'vue'
 import { useAuthStore } from './stores/auth'
+import { applySavedPrefs } from './utils/theme'
 
 const auth = useAuthStore()
+
+// Apply the saved accent/theme before anything paints so it's live everywhere.
+applySavedPrefs()
 
 onMounted(() => {
   if (auth.isAuthenticated) {
@@ -16,28 +23,26 @@ onMounted(() => {
 </script>
 
 <style>
-@import 'bootstrap/dist/css/bootstrap.min.css';
-
-:root {
-  --primary-color: #0d6efd;
-  --secondary-color: #6c757d;
-  --success-color: #198754;
-  --danger-color: #dc2626;
-  --warning-color: #ffc107;
-}
-
-body {
-  font-family:
-    'Inter',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
-  background-color: #f8f9fa;
+.app-container {
+  min-height: 100vh;
+  background: var(--bg-app);
+  color: var(--text);
 }
 
 .cursor-pointer {
   cursor: pointer;
+}
+
+/* Iconsax (VsxIcon) helpers — render as inline SVGs */
+svg {
+  vertical-align: middle;
+}
+.vsx-spin {
+  animation: vsx-spin 0.8s linear infinite;
+}
+@keyframes vsx-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
