@@ -4,12 +4,12 @@
       <div class="page-header">
         <div>
           <h1 class="page-title">
-            <i class="fas fa-calendar-alt me-2 text-gradient"></i>Leave Management
+            <VsxIcon iconName="Calendar" :size="18" class="me-2 text-gradient" />Leave Management
           </h1>
           <p class="page-sub">Manage leave requests and approvals</p>
         </div>
         <router-link to="/leave/apply" class="btn-primary">
-          <i class="fas fa-plus-circle"></i> Apply for Leave
+          <VsxIcon iconName="AddCircle" :size="18" /> Apply for Leave
         </router-link>
       </div>
 
@@ -21,7 +21,7 @@
           :style="{ '--c': lt.color }"
         >
           <div class="bal-icon" :style="{ background: lt.color + '12', color: lt.color }">
-            <i class="fas fa-umbrella-beach"></i>
+            <VsxIcon iconName="Airplane" :size="18" />
           </div>
           <div class="bal-info">
             <div class="bal-type">{{ lt.name }}</div>
@@ -48,7 +48,7 @@
         </div>
         <div class="filters-row">
           <div class="search-wrap">
-            <i class="fas fa-search si"></i>
+            <VsxIcon iconName="SearchNormal1" :size="18" class="si" />
             <input
               type="text"
               class="search-inp"
@@ -63,6 +63,13 @@
             <option value="casual">Casual Leave</option>
             <option value="unpaid">Unpaid Leave</option>
           </select>
+          <select class="filter-sel" v-model="sortBy" title="Sort">
+            <option value="recent">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="name">Employee A–Z</option>
+            <option value="status">Status</option>
+            <option value="duration">Duration</option>
+          </select>
         </div>
       </div>
 
@@ -70,19 +77,19 @@
         <div v-if="leaveStore.loading" class="text-center py-5">
           <div
             class="spinner-sm"
-            style="width: 30px; height: 30px; border-width: 3px; border-top-color: #6823ff"
+            style="width: 30px; height: 30px; border-width: 3px; border-top-color: #4f7cff"
           ></div>
           <p class="mt-2" style="color: #64748b">Loading leave records...</p>
         </div>
 
         <template v-else>
           <div v-if="filtered.length === 0" class="empty-state">
-            <i class="fas fa-calendar-times fa-3x"></i>
+            <VsxIcon iconName="CalendarRemove" :size="44" />
             <p>No {{ activeTab !== 'all' ? activeTab : '' }} leave requests found</p>
           </div>
 
           <div class="leave-list" v-else>
-            <div class="leave-item" v-for="req in filtered" :key="req.id">
+            <div class="leave-item" v-for="req in sortedLeaves" :key="req.id">
               <div class="leave-emp">
                 <div
                   class="avatar-circle"
@@ -111,7 +118,7 @@
 
               <div class="leave-dates">
                 <div class="date-range">
-                  <i class="fas fa-calendar-day"></i>
+                  <VsxIcon iconName="Calendar1" :size="18" />
                   {{ formatDate(req.start_date) }}
                 </div>
                 <div class="date-sep">→</div>
@@ -130,7 +137,7 @@
 
               <div class="status-col">
                 <span class="status-badge" :class="'status-' + req.status">
-                  <i :class="statusIcon(req.status)"></i> {{ req.status }}
+                  <VsxIcon :iconName="statusIcon(req.status)" :size="16" /> {{ req.status }}
                 </span>
               </div>
 
@@ -140,15 +147,15 @@
                   @click="updateStatus(req.id, 'approved')"
                   title="Approve"
                 >
-                  <i class="fas fa-check"></i>
+                  <VsxIcon iconName="TickCircle" :size="18" />
                 </button>
                 <button class="btn-reject" @click="updateStatus(req.id, 'rejected')" title="Reject">
-                  <i class="fas fa-times"></i>
+                  <VsxIcon iconName="CloseCircle" :size="18" />
                 </button>
               </div>
               <div class="leave-actions" v-else>
                 <button class="btn-delete" @click="deleteRecord(req.id)" title="Delete Record">
-                  <i class="fas fa-trash-alt"></i>
+                  <VsxIcon iconName="Trash" :size="18" />
                 </button>
               </div>
             </div>
@@ -171,7 +178,7 @@ const search = ref('')
 const filterType = ref('')
 
 const leaveTypes = ref([
-  { name: 'Annual Leave', value: 'annual', color: '#6823ff', max_days: 18, carry_forward: true },
+  { name: 'Annual Leave', value: 'annual', color: '#4f7cff', max_days: 18, carry_forward: true },
   { name: 'Sick Leave', value: 'sick', color: '#0284c7', max_days: 7, carry_forward: false },
   { name: 'Casual Leave', value: 'casual', color: '#d97706', max_days: 5, carry_forward: false },
 ])
@@ -206,6 +213,26 @@ const filtered = computed(() => {
   })
 })
 
+const sortBy = ref('recent')
+const sortedLeaves = computed(() => {
+  const list = [...filtered.value]
+  const name = (r) => `${r.first_name || ''} ${r.last_name || ''}`.trim().toLowerCase()
+  const day = (r) => new Date(r.start_date || 0).getTime() || 0
+  switch (sortBy.value) {
+    case 'oldest':
+      return list.sort((a, b) => day(a) - day(b))
+    case 'name':
+      return list.sort((a, b) => name(a).localeCompare(name(b)))
+    case 'status':
+      return list.sort((a, b) => String(a.status).localeCompare(String(b.status)))
+    case 'duration':
+      return list.sort((a, b) => (b.duration_days || 0) - (a.duration_days || 0))
+    case 'recent':
+    default:
+      return list.sort((a, b) => day(b) - day(a))
+  }
+})
+
 const formatDate = (d) => {
   if (!d) return '—'
   return new Date(d).toLocaleDateString('en-US', {
@@ -217,15 +244,15 @@ const formatDate = (d) => {
 
 const statusIcon = (s) =>
   ({
-    pending: 'fas fa-hourglass-half',
-    approved: 'fas fa-check-circle',
-    rejected: 'fas fa-times-circle',
+    pending: 'Timer',
+    approved: 'TickCircle',
+    rejected: 'CloseCircle',
   })[s] || ''
 const getInitials = (first, last) =>
   ((first?.charAt(0) || '') + (last?.charAt(0) || '')).toUpperCase()
 const getAvatarGradient = (name) => {
   const g = [
-    'linear-gradient(135deg, #6823ff, #4f0fdb)',
+    'linear-gradient(135deg, #4f7cff, #3b62d4)',
     'linear-gradient(135deg, #0284c7, #0369a1)',
     'linear-gradient(135deg, #e11d48, #be123c)',
     'linear-gradient(135deg, #d97706, #b45309)',
@@ -235,8 +262,8 @@ const getAvatarGradient = (name) => {
 }
 
 const getTypeColor = (type) => {
-  const colors = { annual: '#6823ff', sick: '#0284c7', casual: '#d97706', unpaid: '#ea580c' }
-  return colors[String(type).toLowerCase()] || '#6823ff'
+  const colors = { annual: '#4f7cff', sick: '#0284c7', casual: '#d97706', unpaid: '#ea580c' }
+  return colors[String(type).toLowerCase()] || '#4f7cff'
 }
 
 const getTypeNameFormatted = (type) => {
@@ -283,7 +310,7 @@ onMounted(() => {
   background-color: #f8fafc;
   min-height: 100vh;
   font-family:
-    'Inter',
+    'Plus Jakarta Sans',
     system-ui,
     -apple-system,
     sans-serif;
@@ -306,7 +333,7 @@ onMounted(() => {
   margin: 0;
 }
 .text-gradient {
-  background: linear-gradient(135deg, #6823ff, #0284c7);
+  background: linear-gradient(135deg, var(--accent), #0284c7);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -317,7 +344,7 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: 0.65rem 1.25rem;
-  background: linear-gradient(135deg, #6823ff, #4f0fdb);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   border: none;
   border-radius: 10px;
   color: white;
@@ -325,11 +352,11 @@ onMounted(() => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 14px rgba(104, 35, 255, 0.25);
+  box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.25);
   text-decoration: none;
 }
 .btn-primary:hover {
-  box-shadow: 0 6px 18px rgba(104, 35, 255, 0.35);
+  box-shadow: 0 6px 18px rgba(var(--accent-rgb), 0.35);
   transform: translateY(-1px);
 }
 
@@ -427,8 +454,8 @@ onMounted(() => {
 }
 .tab-btn.active {
   background: #eeebff;
-  border-color: rgba(104, 35, 255, 0.25);
-  color: #6823ff;
+  border-color: rgba(var(--accent-rgb), 0.25);
+  color: var(--accent);
 }
 .tab-count {
   background: #ffffff;
@@ -440,9 +467,9 @@ onMounted(() => {
   border: 1px solid #e2e8f0;
 }
 .tab-btn.active .tab-count {
-  background: #6823ff;
+  background: var(--accent);
   color: #ffffff;
-  border-color: #6823ff;
+  border-color: var(--accent);
 }
 
 .filters-row {
@@ -479,8 +506,8 @@ onMounted(() => {
   color: #94a3b8;
 }
 .search-inp:focus {
-  border-color: #6823ff;
-  box-shadow: 0 0 0 3px rgba(104, 35, 255, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
 }
 .filter-sel {
   padding: 0.6rem 1.5rem 0.6rem 0.9rem;
@@ -495,7 +522,7 @@ onMounted(() => {
   transition: all 0.2s;
 }
 .filter-sel:focus {
-  border-color: #6823ff;
+  border-color: var(--accent);
 }
 
 /* Leave Management Request Registry Table/List */
@@ -578,9 +605,8 @@ onMounted(() => {
   align-items: center;
   gap: 6px;
 }
-.date-range i {
+.date-range :deep(svg) {
   color: #94a3b8;
-  font-size: 0.8rem;
 }
 .date-sep {
   color: #cbd5e1;
@@ -589,11 +615,11 @@ onMounted(() => {
 .days-chip {
   padding: 2px 8px;
   background: #eeebff;
-  color: #6823ff;
+  color: var(--accent);
   border-radius: 8px;
   font-size: 0.725rem;
   font-weight: 700;
-  border: 1px solid rgba(104, 35, 255, 0.1);
+  border: 1px solid rgba(var(--accent-rgb), 0.1);
 }
 
 .leave-reason {
@@ -712,7 +738,7 @@ onMounted(() => {
   align-items: center;
   gap: 1rem;
 }
-.empty-state i {
+.empty-state :deep(svg) {
   color: #cbd5e1;
 }
 .empty-state p {

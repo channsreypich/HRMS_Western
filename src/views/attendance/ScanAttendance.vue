@@ -3,7 +3,7 @@
     <div class="glass-scan-card fade-in">
       <div class="scan-header text-center">
         <div class="qr-icon-animation">
-          <i class="fas fa-qrcode"></i>
+          <VsxIcon iconName="ScanBarcode" :size="18" />
         </div>
         <h2 class="text-gradient mt-3">Staff Attendance</h2>
 
@@ -30,7 +30,12 @@
       <div v-if="!isConfigured" class="mt-4">
         <div class="form-group mb-4">
           <label class="form-label-custom"
-            ><i class="fas fa-id-badge me-2" style="color: #6823ff"></i>Employee Code (ID)</label
+            ><VsxIcon
+              iconName="Personalcard"
+              :size="18"
+              class="me-2"
+              style="color: var(--accent)"
+            />Employee Code (ID)</label
           >
           <input
             type="text"
@@ -47,25 +52,21 @@
           >
         </div>
         <button type="button" class="btn-scan btn-checkin w-100" @click="saveSetup">
-          <i class="fas fa-save me-2"></i> Register Device
+          <VsxIcon iconName="Save2" :size="18" class="me-2" /> Register Device
         </button>
       </div>
 
       <form v-else @submit.prevent class="mt-4">
         <div class="form-group mb-4">
           <label class="form-label-custom"
-            ><i class="fas fa-camera me-2" style="color: #40c8da"></i>Face Verification *</label
+            ><VsxIcon iconName="Camera" :size="18" class="me-2" style="color: #40c8da" />Face
+            Verification *</label
           >
 
           <!-- Live webcam stage (laptop + mobile) -->
           <div class="camera-stage">
             <!-- Captured preview -->
-            <img
-              v-if="previewUrl"
-              :src="previewUrl"
-              alt="Selfie Preview"
-              class="camera-feed"
-            />
+            <img v-if="previewUrl" :src="previewUrl" alt="Selfie Preview" class="camera-feed" />
             <!-- Live video (mirrored so it feels like a selfie) -->
             <video
               v-show="!previewUrl"
@@ -77,7 +78,7 @@
             ></video>
 
             <div v-if="!cameraOn && !previewUrl" class="camera-placeholder">
-              <i class="fas fa-camera"></i>
+              <VsxIcon iconName="Camera" :size="44" />
               <span>Camera is off</span>
             </div>
           </div>
@@ -91,7 +92,7 @@
               class="btn-cam"
               @click="startCamera"
             >
-              <i class="fas fa-video me-2"></i> Open Camera
+              <VsxIcon iconName="Video" :size="18" class="me-2" /> Open Camera
             </button>
             <button
               v-if="cameraOn && !previewUrl"
@@ -99,26 +100,27 @@
               class="btn-cam btn-cam-snap"
               @click="capturePhoto"
             >
-              <i class="fas fa-camera me-2"></i> Capture
+              <VsxIcon iconName="Camera" :size="18" class="me-2" /> Capture
             </button>
             <button v-if="previewUrl" type="button" class="btn-cam" @click="retake">
-              <i class="fas fa-redo me-2"></i> Retake
+              <VsxIcon iconName="Refresh2" :size="18" class="me-2" /> Retake
             </button>
           </div>
 
           <!-- Face recognition status -->
           <div class="face-status mt-2">
             <span v-if="faceProcessing" style="color: #40c8da">
-              <i class="fas fa-spinner fa-spin"></i> Scanning face…
+              <VsxIcon iconName="Refresh2" :size="18" class="vsx-spin" /> Scanning face…
             </span>
             <span v-else-if="previewUrl && faceDescriptor" style="color: #34d399">
-              <i class="fas fa-user-check"></i> Face detected & ready to verify
+              <VsxIcon iconName="UserTick" :size="18" /> Face detected & ready to verify
             </span>
             <span v-else-if="faceReady" style="color: rgba(255, 255, 255, 0.5)">
-              <i class="fas fa-shield-alt"></i> Face recognition ready
+              <VsxIcon iconName="ShieldTick" :size="18" /> Face recognition ready
             </span>
             <span v-else style="color: #fbbf24">
-              <i class="fas fa-spinner fa-spin"></i> Loading face models… (photo still works)
+              <VsxIcon iconName="Refresh2" :size="18" class="vsx-spin" /> Loading face models…
+              (photo still works)
             </span>
           </div>
 
@@ -145,7 +147,8 @@
             @click="triggerAttendance('Present')"
             :disabled="isSubmitting"
           >
-            <i class="fas fa-sign-in-alt me-2"></i> {{ isSubmitting ? 'Verifying...' : 'Check In' }}
+            <VsxIcon iconName="Login" :size="18" class="me-2" />
+            {{ isSubmitting ? 'Verifying...' : 'Check In' }}
           </button>
           <button
             type="button"
@@ -153,7 +156,7 @@
             @click="triggerAttendance('Left')"
             :disabled="isSubmitting"
           >
-            <i class="fas fa-sign-out-alt me-2"></i>
+            <VsxIcon iconName="Logout" :size="18" class="me-2" />
             {{ isSubmitting ? 'Verifying...' : 'Check Out' }}
           </button>
         </div>
@@ -371,7 +374,7 @@ const resetSetup = () => {
     text: 'Do you want to unlink this Employee ID from this device?',
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonColor: '#6823ff',
+    confirmButtonColor: '#4f7cff',
     cancelButtonColor: '#2d2d44',
     confirmButtonText: 'Yes, change it!',
   }).then((result) => {
@@ -473,8 +476,10 @@ const triggerAttendance = (statusType) => {
     Swal.fire({
       icon: 'warning',
       title: 'Face Required',
-      text: 'Please capture your face (Open Camera → Capture) before ' +
-        (statusType === 'Present' ? 'checking in' : 'checking out') + '.',
+      text:
+        'Please capture your face (Open Camera → Capture) before ' +
+        (statusType === 'Present' ? 'checking in' : 'checking out') +
+        '.',
     })
     return
   }
@@ -538,7 +543,7 @@ const triggerAttendance = (statusType) => {
   background: radial-gradient(circle at 50% 50%, #f8fafc 0%, #e2e8f0 100%);
   padding: 1.5rem;
   font-family:
-    'Inter',
+    'Plus Jakarta Sans',
     system-ui,
     -apple-system,
     sans-serif;
@@ -562,13 +567,13 @@ const triggerAttendance = (statusType) => {
 /* Header & Icon Elements */
 .qr-icon-animation {
   font-size: 3.25rem;
-  color: #6823ff;
+  color: var(--accent);
   display: inline-block;
   animation: pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #6823ff 0%, #0284c7 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, #0284c7 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -602,9 +607,9 @@ const triggerAttendance = (statusType) => {
 }
 
 .form-control-custom:focus {
-  border-color: #6823ff;
+  border-color: var(--accent);
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(104, 35, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.15);
 }
 
 .form-control-custom::placeholder {
@@ -697,7 +702,7 @@ const triggerAttendance = (statusType) => {
   font-size: 14px;
   color: #fff;
   cursor: pointer;
-  background: linear-gradient(135deg, #6823ff, #13707f);
+  background: linear-gradient(135deg, var(--accent), #64748b);
 }
 .btn-cam-snap {
   background: linear-gradient(135deg, #0284c7, #40c8da);
@@ -740,12 +745,12 @@ const triggerAttendance = (statusType) => {
 }
 
 .btn-checkin {
-  background: linear-gradient(135deg, #6823ff 0%, #5215e6 100%);
-  box-shadow: 0 4px 15px rgba(104, 35, 255, 0.25);
+  background: linear-gradient(135deg, var(--accent) 0%, #5215e6 100%);
+  box-shadow: 0 4px 15px rgba(var(--accent-rgb), 0.25);
 }
 
 .btn-checkin:hover:not(:disabled) {
-  box-shadow: 0 6px 20px rgba(104, 35, 255, 0.35);
+  box-shadow: 0 6px 20px rgba(var(--accent-rgb), 0.35);
 }
 
 .btn-checkout {
@@ -807,7 +812,7 @@ const triggerAttendance = (statusType) => {
   0% {
     transform: scale(1);
     opacity: 0.8;
-    filter: drop-shadow(0 0 0px rgba(104, 35, 255, 0));
+    filter: drop-shadow(0 0 0px rgba(var(--accent-rgb), 0));
   }
   50% {
     transform: scale(1.05);
@@ -818,7 +823,7 @@ const triggerAttendance = (statusType) => {
   100% {
     transform: scale(1);
     opacity: 0.8;
-    filter: drop-shadow(0 0 0px rgba(104, 35, 255, 0));
+    filter: drop-shadow(0 0 0px rgba(var(--accent-rgb), 0));
   }
 }
 

@@ -3,15 +3,17 @@
     <div class="att-container">
       <div class="page-header">
         <div>
-          <h1 class="page-title"><i class="fas fa-clock me-2 text-gradient"></i>Attendance</h1>
+          <h1 class="page-title">
+            <VsxIcon iconName="Clock" :size="18" class="me-2 text-gradient" />Attendance
+          </h1>
           <p class="page-sub">Track and manage employee attendance records</p>
         </div>
         <div class="header-actions">
           <button class="btn-outline" @click="exportCSV">
-            <i class="fas fa-download"></i> Export
+            <VsxIcon iconName="DocumentDownload" :size="18" /> Export
           </button>
           <button class="btn-primary" @click="openMarkModal">
-            <i class="fas fa-plus-circle"></i> Mark Attendance
+            <VsxIcon iconName="AddCircle" :size="18" /> Mark Attendance
           </button>
         </div>
       </div>
@@ -24,7 +26,7 @@
           :style="{ '--accent': s.color }"
         >
           <div class="sum-icon-wrap" :style="{ background: s.color + '20' }">
-            <i :class="s.icon" :style="{ color: s.color }"></i>
+            <VsxIcon :iconName="s.icon" :size="22" :style="{ color: s.color }" />
           </div>
           <div class="sum-content">
             <div class="sum-value">{{ s.value }}</div>
@@ -36,7 +38,7 @@
 
       <div class="dark-card toolbar">
         <div class="search-wrap">
-          <i class="fas fa-search si"></i>
+          <VsxIcon iconName="SearchNormal1" :size="18" class="si" />
           <input type="text" class="search-inp" placeholder="Search employee..." v-model="search" />
         </div>
         <input type="date" class="date-inp" v-model="filterDate" />
@@ -52,20 +54,20 @@
           <option v-for="d in departments" :key="d" :value="d">{{ d }}</option>
         </select>
         <button class="btn-outline" @click="resetFilters">
-          <i class="fas fa-redo-alt"></i> Reset
+          <VsxIcon iconName="Refresh2" :size="18" /> Reset
         </button>
         <div class="view-toggle">
           <button
             :class="['view-btn', { active: viewMode === 'table' }]"
             @click="viewMode = 'table'"
           >
-            <i class="fas fa-list"></i>
+            <VsxIcon iconName="TaskSquare" :size="18" />
           </button>
           <button
             :class="['view-btn', { active: viewMode === 'calendar' }]"
             @click="viewMode = 'calendar'"
           >
-            <i class="fas fa-calendar"></i>
+            <VsxIcon iconName="Calendar" :size="18" />
           </button>
         </div>
       </div>
@@ -81,13 +83,26 @@
           <table class="dark-table">
             <thead>
               <tr>
-                <th>Employee</th>
+                <th class="sortable" @click="toggle('name')">
+                  Employee <VsxIcon :iconName="sortIcon('name')" :size="14" class="sort-ic" />
+                </th>
                 <th>Face</th>
-                <th>Department</th>
-                <th>Date</th>
-                <th>Check In</th>
-                <th>Check Out</th>
-                <th>Status</th>
+                <th class="sortable" @click="toggle('department_name')">
+                  Department
+                  <VsxIcon :iconName="sortIcon('department_name')" :size="14" class="sort-ic" />
+                </th>
+                <th class="sortable" @click="toggle('date')">
+                  Date <VsxIcon :iconName="sortIcon('date')" :size="14" class="sort-ic" />
+                </th>
+                <th class="sortable" @click="toggle('check_in')">
+                  Check In <VsxIcon :iconName="sortIcon('check_in')" :size="14" class="sort-ic" />
+                </th>
+                <th class="sortable" @click="toggle('check_out')">
+                  Check Out <VsxIcon :iconName="sortIcon('check_out')" :size="14" class="sort-ic" />
+                </th>
+                <th class="sortable" @click="toggle('status')">
+                  Status <VsxIcon :iconName="sortIcon('status')" :size="14" class="sort-ic" />
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -99,7 +114,7 @@
               </tr>
               <tr v-else-if="paginated.length === 0">
                 <td colspan="7" class="empty-row">
-                  <i class="fas fa-clock fa-2x mb-2"></i><br />No records found
+                  <VsxIcon iconName="Clock" :size="28" class="mb-2" /><br />No records found
                 </td>
               </tr>
               <tr v-else v-for="rec in paginated" :key="rec.id" class="att-row">
@@ -124,7 +139,7 @@
                   >
                     <img :src="selfieUrl(rec.selfie_url)" alt="face" class="face-thumb" />
                   </a>
-                  <span class="na-text" v-else><i class="fas fa-user-slash"></i></span>
+                  <span class="na-text" v-else><VsxIcon iconName="UserRemove" :size="18" /></span>
                 </td>
                 <td>
                   <span class="dept-chip">{{ rec.department_name || '—' }}</span>
@@ -132,13 +147,13 @@
                 <td>{{ formatDate(rec.date) }}</td>
                 <td>
                   <span class="time-badge" v-if="rec.check_in">
-                    <i class="fas fa-sign-in-alt"></i> {{ formatTime(rec.check_in) }}
+                    <VsxIcon iconName="Login" :size="18" /> {{ formatTime(rec.check_in) }}
                   </span>
                   <span class="na-text" v-else>—</span>
                 </td>
                 <td>
                   <span class="time-badge out" v-if="rec.check_out">
-                    <i class="fas fa-sign-out-alt"></i> {{ formatTime(rec.check_out) }}
+                    <VsxIcon iconName="Logout" :size="18" /> {{ formatTime(rec.check_out) }}
                   </span>
                   <span class="na-text" v-else>—</span>
                 </td>
@@ -158,7 +173,7 @@
           </div>
           <div class="page-btns">
             <button class="page-btn" :disabled="page === 1" @click="page--">
-              <i class="fas fa-chevron-left"></i>
+              <VsxIcon iconName="ArrowLeft2" :size="18" />
             </button>
             <button
               v-for="p in totalPages"
@@ -170,7 +185,7 @@
               {{ p }}
             </button>
             <button class="page-btn" :disabled="page === totalPages" @click="page++">
-              <i class="fas fa-chevron-right"></i>
+              <VsxIcon iconName="ArrowRight2" :size="18" />
             </button>
           </div>
         </div>
@@ -178,9 +193,13 @@
 
       <div v-else class="dark-card">
         <div class="cal-header">
-          <button class="cal-nav" @click="prevMonth"><i class="fas fa-chevron-left"></i></button>
+          <button class="cal-nav" @click="prevMonth">
+            <VsxIcon iconName="ArrowLeft2" :size="18" />
+          </button>
           <h3 class="cal-month-title">{{ calMonthLabel }}</h3>
-          <button class="cal-nav" @click="nextMonth"><i class="fas fa-chevron-right"></i></button>
+          <button class="cal-nav" @click="nextMonth">
+            <VsxIcon iconName="ArrowRight2" :size="18" />
+          </button>
         </div>
         <div class="cal-legend">
           <span v-for="s in statusLegend" :key="s.key" class="legend-item">
@@ -230,9 +249,9 @@
     <div class="modal-overlay" v-if="showMarkModal" @click.self="showMarkModal = false">
       <div class="modal-box">
         <div class="modal-head">
-          <h3><i class="fas fa-clock me-2"></i>Mark Attendance</h3>
+          <h3><VsxIcon iconName="Clock" :size="18" class="me-2" />Mark Attendance</h3>
           <button class="close-btn" @click="showMarkModal = false">
-            <i class="fas fa-times"></i>
+            <VsxIcon iconName="CloseCircle" :size="18" />
           </button>
         </div>
         <form @submit.prevent="markAtt" class="modal-form">
@@ -293,6 +312,7 @@ import { ref, computed, reactive, onMounted } from 'vue'
 import MainLayout from '@/components/layouts/MainLayout.vue'
 import { useAttendanceStore } from '@/stores/attendance'
 import { useEmployeeStore } from '@/stores/employee'
+import { useTableSort } from '@/composables/useTableSort'
 import { toast } from 'vue3-toastify'
 
 const attStore = useAttendanceStore()
@@ -345,28 +365,28 @@ const summaryCards = computed(() => {
       label: 'Present',
       value: present,
       pct: Math.round((present / total) * 100),
-      icon: 'fas fa-check-circle',
+      icon: 'TickCircle',
       color: '#34d399',
     },
     {
       label: 'Late',
       value: late,
       pct: Math.round((late / total) * 100),
-      icon: 'fas fa-clock',
+      icon: 'Clock',
       color: '#fbbf24',
     },
     {
       label: 'Absent',
       value: absent,
       pct: Math.round((absent / total) * 100),
-      icon: 'fas fa-times-circle',
+      icon: 'CloseCircle',
       color: '#f87171',
     },
     {
       label: 'Half Day',
       value: halfDay,
       pct: Math.round((halfDay / total) * 100),
-      icon: 'fas fa-hourglass-half',
+      icon: 'Timer',
       color: '#60a5fa',
     },
   ]
@@ -437,10 +457,16 @@ const calDays = computed(() => {
   return days
 })
 
+const { toggle, sortIcon, sorted: sortedFiltered } = useTableSort(filtered, {
+  accessors: {
+    name: (r) => `${r.first_name || ''} ${r.last_name || ''}`.trim() || r.employee_name || '',
+  },
+})
+
 const totalPages = computed(() => Math.ceil(filtered.value.length / perPage))
 const paginated = computed(() => {
   const start = (page.value - 1) * perPage
-  return filtered.value.slice(start, start + perPage)
+  return sortedFiltered.value.slice(start, start + perPage)
 })
 
 const calYear = computed(() => {
@@ -520,7 +546,7 @@ const getInitials = (first, last) =>
   ((first?.charAt(0) || '') + (last?.charAt(0) || '')).toUpperCase()
 const getAvatarGradient = (name) => {
   const g = [
-    'linear-gradient(135deg,#6823ff,#13707f)',
+    'linear-gradient(135deg,#4f7cff,#64748b)',
     'linear-gradient(135deg,#a47bff,#40c8da)',
     'linear-gradient(135deg,#f87171,#a47bff)',
     'linear-gradient(135deg,#fbbf24,#f87171)',
@@ -561,13 +587,18 @@ onMounted(async () => {
 })
 </script>
 <style scoped>
+.dark-table th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+.dark-table th.sortable:hover { color: var(--accent); }
+.sort-ic { opacity: 0.55; vertical-align: -2px; }
+.dark-table th.sortable:hover .sort-ic { opacity: 1; }
+
 /* Core Styling Layout Container */
 .att-container {
   padding: 2rem;
   background-color: #f8fafc;
   min-height: 100vh;
   font-family:
-    'Inter',
+    'Plus Jakarta Sans',
     system-ui,
     -apple-system,
     sans-serif;
@@ -597,7 +628,7 @@ onMounted(async () => {
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #6823ff 0%, #0284c7 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, #0284c7 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -623,14 +654,14 @@ onMounted(async () => {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #6823ff 0%, #5215e6 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, #5215e6 100%);
   color: #ffffff;
   border: none;
-  box-shadow: 0 4px 12px rgba(104, 35, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.2);
 }
 
 .btn-primary:hover {
-  box-shadow: 0 6px 16px rgba(104, 35, 255, 0.3);
+  box-shadow: 0 6px 16px rgba(var(--accent-rgb), 0.3);
   transform: translateY(-1px);
 }
 
@@ -763,8 +794,8 @@ onMounted(async () => {
 .search-inp:focus,
 .date-inp:focus,
 .filter-sel:focus {
-  border-color: #6823ff;
-  box-shadow: 0 0 0 3px rgba(104, 35, 255, 0.12);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12);
 }
 
 /* View Mode Toggles */
@@ -788,7 +819,7 @@ onMounted(async () => {
 
 .view-btn.active {
   background: #ffffff;
-  color: #6823ff;
+  color: var(--accent);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
@@ -968,8 +999,8 @@ onMounted(async () => {
 }
 
 .page-btn.active {
-  background: #6823ff;
-  border-color: #6823ff;
+  background: var(--accent);
+  border-color: var(--accent);
   color: #ffffff;
 }
 
@@ -1197,8 +1228,8 @@ onMounted(async () => {
 
 .form-field input:focus,
 .form-field select:focus {
-  border-color: #6823ff;
-  box-shadow: 0 0 0 3px rgba(104, 35, 255, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
 }
 
 .modal-footer {
@@ -1221,7 +1252,7 @@ onMounted(async () => {
 .pulse-loader {
   width: 24px;
   height: 24px;
-  background-color: #6823ff;
+  background-color: var(--accent);
   border-radius: 50%;
   margin: 0 auto 0.75rem auto;
   animation: pulseGrid 1.2s infinite ease-in-out;

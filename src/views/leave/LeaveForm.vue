@@ -4,12 +4,12 @@
       <div class="page-header">
         <div>
           <h1 class="page-title">
-            <i class="fas fa-calendar-day me-2 text-gradient"></i>Apply for Leave
+            <VsxIcon iconName="Calendar1" :size="18" class="me-2 text-gradient" />Apply for Leave
           </h1>
           <p class="page-sub">Submit a leave request for approval</p>
         </div>
         <router-link to="/leave" class="btn-outline">
-          <i class="fas fa-arrow-left"></i> Back to Leave
+          <VsxIcon iconName="ArrowLeft" :size="18" /> Back to Leave
         </router-link>
       </div>
 
@@ -66,7 +66,7 @@
             </div>
 
             <div class="days-display" v-if="displayDays > 0">
-              <i class="fas fa-calendar-day"></i>
+              <VsxIcon iconName="Calendar1" :size="18" />
               <strong>{{ displayDays }}</strong> working day{{ displayDays > 1 ? 's' : '' }}
               selected
             </div>
@@ -89,7 +89,7 @@
                 @dragover.prevent
                 @drop.prevent="handleDrop"
               >
-                <i class="fas fa-cloud-upload-alt"></i>
+                <VsxIcon iconName="CloudPlus" :size="36" />
                 <p>Drag & drop or <span class="click-link">click to upload</span></p>
                 <p class="file-hint">PDF, JPG, PNG up to 5MB</p>
                 <p class="file-name" v-if="fileName">{{ fileName }}</p>
@@ -111,7 +111,7 @@
                 :disabled="leaveStore.loading || displayDays <= 0"
               >
                 <span v-if="leaveStore.loading" class="spinner-sm"></span>
-                <i v-else class="fas fa-paper-plane me-2"></i>
+                <VsxIcon iconName="Send2" :size="18" class="me-2" v-else />
                 Submit Leave Request
               </button>
             </div>
@@ -144,7 +144,7 @@
 
           <div class="dark-card info-card">
             <h4 class="info-title">
-              <i class="fas fa-lightbulb me-2" style="color: #d97706"></i>Tips
+              <VsxIcon iconName="Lamp" :size="18" class="me-2" style="color: #d97706" />Tips
             </h4>
             <ul class="tips-list">
               <li>Submit your request at least <strong>3 days</strong> in advance</li>
@@ -203,7 +203,7 @@ const fileName = ref('')
 const displayDays = ref(0)
 
 const leaveTypes = ref([
-  { name: 'Annual Leave', value: 'annual', color: '#6823ff', max_days: 18, carry_forward: true },
+  { name: 'Annual Leave', value: 'annual', color: '#4f7cff', max_days: 18, carry_forward: true },
   { name: 'Sick Leave', value: 'sick', color: '#0284c7', max_days: 7, carry_forward: false },
   { name: 'Casual Leave', value: 'casual', color: '#d97706', max_days: 5, carry_forward: false },
 ])
@@ -285,7 +285,7 @@ onMounted(async () => {
   background-color: #f8fafc;
   min-height: 100vh;
   font-family:
-    'Inter',
+    'Plus Jakarta Sans',
     system-ui,
     -apple-system,
     sans-serif;
@@ -309,7 +309,7 @@ onMounted(async () => {
   margin: 0;
 }
 .text-gradient {
-  background: linear-gradient(135deg, #6823ff, #0284c7);
+  background: linear-gradient(135deg, var(--accent), #0284c7);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -321,7 +321,7 @@ onMounted(async () => {
   align-items: center;
   gap: 8px;
   padding: 0.65rem 1.25rem;
-  background: linear-gradient(135deg, #6823ff, #4f0fdb);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   border: none;
   border-radius: 10px;
   color: white;
@@ -329,10 +329,10 @@ onMounted(async () => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 14px rgba(104, 35, 255, 0.25);
+  box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.25);
 }
 .btn-primary:hover:not(:disabled) {
-  box-shadow: 0 6px 18px rgba(104, 35, 255, 0.35);
+  box-shadow: 0 6px 18px rgba(var(--accent-rgb), 0.35);
   transform: translateY(-1px);
 }
 .btn-primary:disabled {
@@ -417,8 +417,8 @@ onMounted(async () => {
 .form-field input:focus,
 .form-field textarea:focus,
 .light-select:focus {
-  border-color: #6823ff;
-  box-shadow: 0 0 0 3px rgba(104, 35, 255, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
 }
 .form-field textarea {
   resize: vertical;
@@ -472,7 +472,7 @@ onMounted(async () => {
   gap: 10px;
   padding: 0.85rem 1.25rem;
   background: #eeebff;
-  border: 1px solid rgba(104, 35, 255, 0.2);
+  border: 1px solid rgba(var(--accent-rgb), 0.2);
   border-radius: 12px;
   color: #5215e6;
   font-size: 0.9rem;
@@ -480,7 +480,7 @@ onMounted(async () => {
 }
 .days-display strong {
   font-size: 1.15rem;
-  color: #6823ff;
+  color: var(--accent);
 }
 
 /* Document Attachment Area */
@@ -495,17 +495,16 @@ onMounted(async () => {
   background: #f8fafc;
 }
 .file-upload-area:hover {
-  border-color: #6823ff;
+  border-color: var(--accent);
   background: #f5f3ff;
   color: #0f172a;
 }
-.file-upload-area i {
-  font-size: 2.25rem;
+.file-upload-area :deep(svg) {
   margin-bottom: 0.5rem;
   color: #94a3b8;
 }
-.file-upload-area:hover i {
-  color: #6823ff;
+.file-upload-area:hover :deep(svg) {
+  color: var(--accent);
 }
 .file-upload-area p {
   margin: 0;
@@ -513,7 +512,7 @@ onMounted(async () => {
   line-height: 1.4;
 }
 .click-link {
-  color: #6823ff;
+  color: var(--accent);
   font-weight: 700;
 }
 .file-hint {
@@ -616,7 +615,7 @@ onMounted(async () => {
   font-weight: 600;
 }
 .preview-val.highlight {
-  color: #6823ff;
+  color: var(--accent);
   font-weight: 800;
 }
 .type-pill {

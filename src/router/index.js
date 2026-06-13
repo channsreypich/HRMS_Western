@@ -143,6 +143,12 @@ const router = createRouter({
       component: () => import('@/views/settings/SettingsView.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: () => import('@/views/profile/ProfileView.vue'),
+      meta: { requiresAuth: true },
+    },
 
     // ─── CATCH-ALL 404 ───
     // Any unknown path (typos, refresh on a removed route) falls back to the

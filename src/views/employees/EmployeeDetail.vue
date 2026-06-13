@@ -9,7 +9,7 @@
 
       <!-- ⬜ Error layout with clean borders -->
       <div v-else-if="error" class="light-card error-state fade-in">
-        <i class="fas fa-exclamation-triangle fa-3x mb-3" style="color: #dc2626"></i>
+        <VsxIcon iconName="Warning2" :size="44" class="mb-3" style="color: #dc2626" />
         <h3>Error Loading Employee</h3>
         <p>{{ error }}</p>
         <button class="btn-primary mt-3" @click="router.push('/employees')">
@@ -36,14 +36,16 @@
                     {{ employee?.status }}
                   </span>
                   <span class="dept-chip" v-if="employee?.department_name">
-                    <i class="fas fa-building me-1"></i>{{ employee.department_name }}
+                    <VsxIcon iconName="Building" :size="18" class="me-1" />{{
+                      employee.department_name
+                    }}
                   </span>
                 </div>
               </div>
             </div>
             <div class="header-actions">
               <button class="btn-ghost" @click="router.push('/employees')">
-                <i class="fas fa-arrow-left me-2"></i>Back
+                <VsxIcon iconName="ArrowLeft" :size="18" class="me-2" />Back
               </button>
               <button
                 v-if="!employee?.face_enrolled"
@@ -51,18 +53,18 @@
                 @click="showEnroll = true"
                 title="Register this employee's face for attendance scanning"
               >
-                <i class="fas fa-camera me-2"></i>Enroll Face
+                <VsxIcon iconName="Camera" :size="18" class="me-2" />Enroll Face
               </button>
               <template v-else>
                 <button class="btn-ghost" @click="showEnroll = true" title="Capture a new face">
-                  <i class="fas fa-sync-alt me-2"></i>Re-enroll
+                  <VsxIcon iconName="Refresh2" :size="18" class="me-2" />Re-enroll
                 </button>
                 <button class="btn-ghost" @click="resetFace" title="Clear the registered face">
-                  <i class="fas fa-user-shield me-2"></i>Reset Face
+                  <VsxIcon iconName="SecurityUser" :size="18" class="me-2" />Reset Face
                 </button>
               </template>
               <button class="btn-primary" @click="editEmployee">
-                <i class="fas fa-edit me-2"></i>Edit
+                <VsxIcon iconName="Edit2" :size="18" class="me-2" />Edit
               </button>
             </div>
           </div>
@@ -72,8 +74,8 @@
           <!-- ⬜ Profile Block: Personal Details -->
           <div class="light-card info-card fade-in" style="animation-delay: 0.08s">
             <div class="card-header">
-              <div class="card-icon-wrap" style="background: rgba(104, 35, 255, 0.08)">
-                <i class="fas fa-user" style="color: #6823ff"></i>
+              <div class="card-icon-wrap" style="background: rgba(79, 124, 255, 0.08)">
+                <VsxIcon iconName="User" :size="18" style="color: var(--accent)" />
               </div>
               <h3>Personal Information</h3>
             </div>
@@ -101,7 +103,7 @@
           <div class="light-card info-card fade-in" style="animation-delay: 0.14s">
             <div class="card-header">
               <div class="card-icon-wrap" style="background: rgba(6, 182, 212, 0.08)">
-                <i class="fas fa-briefcase" style="color: #06b6d4"></i>
+                <VsxIcon iconName="Briefcase" :size="18" style="color: #06b6d4" />
               </div>
               <h3>Employment Information</h3>
             </div>
@@ -142,11 +144,11 @@
                 <span class="info-label">Face Recognition</span>
                 <span class="info-value">
                   <span v-if="employee?.face_enrolled" style="color: #16a34a; font-weight: 600">
-                    <i class="fas fa-user-check me-1"></i>Enrolled
+                    <VsxIcon iconName="UserTick" :size="18" class="me-1" />Enrolled
                   </span>
                   <span v-else style="color: #94a3b8">
-                    <i class="fas fa-user-clock me-1"></i>Not enrolled (HR must enroll before
-                    scanning)
+                    <VsxIcon iconName="UserTick" :size="18" class="me-1" />Not enrolled (HR must
+                    enroll before scanning)
                   </span>
                 </span>
               </div>
@@ -158,13 +160,13 @@
         <div class="light-card action-bar fade-in" style="animation-delay: 0.32s">
           <div class="action-buttons">
             <button class="btn-ghost" @click="router.push('/employees')">
-              <i class="fas fa-arrow-left me-2"></i>Back to List
+              <VsxIcon iconName="ArrowLeft" :size="18" class="me-2" />Back to List
             </button>
             <button class="btn-primary" @click="editEmployee">
-              <i class="fas fa-edit me-2"></i>Edit Employee
+              <VsxIcon iconName="Edit2" :size="18" class="me-2" />Edit Employee
             </button>
             <button class="btn-danger" @click="confirmDelete">
-              <i class="fas fa-trash me-2"></i>Delete Employee
+              <VsxIcon iconName="Trash" :size="18" class="me-2" />Delete Employee
             </button>
           </div>
         </div>
@@ -177,12 +179,12 @@
         <div class="modal-header">
           <h3>Confirm Delete</h3>
           <button class="btn-icon" @click="showDeleteModal = false">
-            <i class="fas fa-times"></i>
+            <VsxIcon iconName="CloseCircle" :size="18" />
           </button>
         </div>
         <div class="modal-body">
           <div class="delete-icon-wrap">
-            <i class="fas fa-exclamation-triangle" style="color: #dc2626; font-size: 2.5rem"></i>
+            <VsxIcon iconName="Warning2" :size="40" style="color: #dc2626" />
           </div>
           <p class="delete-msg">
             Are you sure you want to delete
@@ -255,7 +257,7 @@ const getInitials = (first, last) =>
   ((first?.charAt(0) || '') + (last?.charAt(0) || '')).toUpperCase()
 const getAvatarGradient = (name) => {
   const g = [
-    'linear-gradient(135deg,#6823ff,#13707f)',
+    'linear-gradient(135deg,#4f7cff,#64748b)',
     'linear-gradient(135deg,#a47bff,#40c8da)',
     'linear-gradient(135deg,#f87171,#a47bff)',
     'linear-gradient(135deg,#fbbf24,#f87171)',
@@ -337,8 +339,8 @@ onMounted(async () => {
     box-shadow 0.25s;
 }
 .light-card:hover {
-  border-color: rgba(104, 35, 255, 0.2);
-  box-shadow: 0 6px 12px -1px rgba(104, 35, 255, 0.04);
+  border-color: rgba(var(--accent-rgb), 0.2);
+  box-shadow: 0 6px 12px -1px rgba(var(--accent-rgb), 0.04);
 }
 
 /* ── Content States ── */
@@ -378,7 +380,7 @@ onMounted(async () => {
   color: white;
   font-weight: 800;
   font-size: 1.35rem;
-  box-shadow: 0 6px 16px rgba(104, 35, 255, 0.25);
+  box-shadow: 0 6px 16px rgba(var(--accent-rgb), 0.25);
 }
 .page-title {
   font-size: 1.55rem;
@@ -493,18 +495,18 @@ onMounted(async () => {
   font-weight: 500;
 }
 .link-purple {
-  color: #6823ff;
+  color: var(--accent);
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s;
 }
 .link-purple:hover {
-  color: #4f0fdb;
+  color: var(--accent-strong);
   text-decoration: underline;
 }
 
 .salary-value {
-  background: linear-gradient(135deg, #4f0fdb, #0891b2);
+  background: linear-gradient(135deg, var(--accent-strong), #0891b2);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -512,8 +514,8 @@ onMounted(async () => {
   font-size: 0.95rem;
 }
 .dept-badge {
-  background: rgba(104, 35, 255, 0.08);
-  color: #6823ff;
+  background: rgba(var(--accent-rgb), 0.08);
+  color: var(--accent);
   padding: 2px 9px;
   border-radius: 20px;
   font-size: 0.73rem;
@@ -544,7 +546,7 @@ onMounted(async () => {
   align-items: center;
   gap: 7px;
   padding: 0.6rem 1.2rem;
-  background: linear-gradient(135deg, #6823ff, #4f0fdb);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   border: none;
   border-radius: 10px;
   color: white;
@@ -554,7 +556,7 @@ onMounted(async () => {
   transition:
     opacity 0.2s,
     transform 0.1s;
-  box-shadow: 0 4px 14px rgba(104, 35, 255, 0.2);
+  box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.2);
 }
 .btn-primary:hover {
   opacity: 0.95;
@@ -621,9 +623,9 @@ onMounted(async () => {
   transition: all 0.2s;
 }
 .btn-icon:hover {
-  background: rgba(104, 35, 255, 0.08);
-  color: #6823ff;
-  border-color: rgba(104, 35, 255, 0.2);
+  background: rgba(var(--accent-rgb), 0.08);
+  color: var(--accent);
+  border-color: rgba(var(--accent-rgb), 0.2);
 }
 
 /* ── Warning Confirmation Modals ── */

@@ -2,39 +2,64 @@
   <div v-if="show" class="fe-overlay" @click.self="close">
     <div class="fe-modal">
       <div class="fe-head">
-        <h3><i class="fas fa-user-shield me-2"></i>Enroll Face</h3>
-        <button class="fe-close" @click="close"><i class="fas fa-times"></i></button>
+        <h3><VsxIcon iconName="SecurityUser" :size="18" class="me-2" />Enroll Face</h3>
+        <button class="fe-close" @click="close">
+          <VsxIcon iconName="CloseCircle" :size="18" />
+        </button>
       </div>
-      <p class="fe-sub">Register the face for <strong>{{ employeeName }}</strong>. They'll use this to verify attendance scans.</p>
+      <p class="fe-sub">
+        Register the face for <strong>{{ employeeName }}</strong
+        >. They'll use this to verify attendance scans.
+      </p>
 
       <div class="fe-stage">
         <img v-if="previewUrl" :src="previewUrl" class="fe-feed" alt="capture" />
-        <video v-show="!previewUrl" ref="videoRef" class="fe-feed mirror" autoplay playsinline muted></video>
+        <video
+          v-show="!previewUrl"
+          ref="videoRef"
+          class="fe-feed mirror"
+          autoplay
+          playsinline
+          muted
+        ></video>
         <div v-if="!cameraOn && !previewUrl" class="fe-placeholder">
-          <i class="fas fa-camera"></i><span>Camera is off</span>
+          <VsxIcon iconName="Camera" :size="40" /><span>Camera is off</span>
         </div>
       </div>
       <canvas ref="canvasRef" class="d-none"></canvas>
 
       <div class="fe-status">
-        <span v-if="processing" style="color: #0284c7"><i class="fas fa-spinner fa-spin"></i> Detecting face…</span>
-        <span v-else-if="previewUrl && descriptor" style="color: #16a34a"><i class="fas fa-user-check"></i> Face detected — ready to save</span>
-        <span v-else-if="!ready" style="color: #d97706"><i class="fas fa-spinner fa-spin"></i> Loading face models…</span>
+        <span v-if="processing" style="color: #0284c7"
+          ><VsxIcon iconName="Refresh2" :size="18" class="vsx-spin" /> Detecting face…</span
+        >
+        <span v-else-if="previewUrl && descriptor" style="color: #16a34a"
+          ><VsxIcon iconName="UserTick" :size="18" /> Face detected — ready to save</span
+        >
+        <span v-else-if="!ready" style="color: #d97706"
+          ><VsxIcon iconName="Refresh2" :size="18" class="vsx-spin" /> Loading face models…</span
+        >
         <span v-else style="color: #64748b">Position the employee's face in the frame.</span>
       </div>
 
       <div class="fe-actions">
         <button v-if="!cameraOn && !previewUrl" class="fe-btn" @click="startCamera">
-          <i class="fas fa-video me-2"></i>Open Camera
+          <VsxIcon iconName="Video" :size="18" class="me-2" />Open Camera
         </button>
         <button v-if="cameraOn && !previewUrl" class="fe-btn primary" @click="capture">
-          <i class="fas fa-camera me-2"></i>Capture
+          <VsxIcon iconName="Camera" :size="18" class="me-2" />Capture
         </button>
         <button v-if="previewUrl" class="fe-btn" @click="retake">
-          <i class="fas fa-redo me-2"></i>Retake
+          <VsxIcon iconName="Refresh2" :size="18" class="me-2" />Retake
         </button>
-        <button v-if="previewUrl && descriptor" class="fe-btn success" :disabled="saving" @click="save">
-          <i class="fas fa-save me-2"></i>{{ saving ? 'Saving…' : 'Save Enrollment' }}
+        <button
+          v-if="previewUrl && descriptor"
+          class="fe-btn success"
+          :disabled="saving"
+          @click="save"
+        >
+          <VsxIcon iconName="Save2" :size="18" class="me-2" />{{
+            saving ? 'Saving…' : 'Save Enrollment'
+          }}
         </button>
       </div>
     </div>
@@ -83,11 +108,18 @@ watch(
 
 const startCamera = async () => {
   if (!navigator.mediaDevices?.getUserMedia) {
-    Swal.fire({ icon: 'error', title: 'Camera not available', text: 'Use http://localhost or HTTPS to access the camera.' })
+    Swal.fire({
+      icon: 'error',
+      title: 'Camera not available',
+      text: 'Use http://localhost or HTTPS to access the camera.',
+    })
     return
   }
   try {
-    mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user' },
+      audio: false,
+    })
     cameraOn.value = true
     await new Promise((r) => setTimeout(r, 0))
     if (videoRef.value) {
@@ -96,7 +128,11 @@ const startCamera = async () => {
     }
   } catch (err) {
     stopCamera()
-    Swal.fire({ icon: 'error', title: 'Camera unavailable', text: 'Allow camera permission and retry. (' + (err?.name || 'error') + ')' })
+    Swal.fire({
+      icon: 'error',
+      title: 'Camera unavailable',
+      text: 'Allow camera permission and retry. (' + (err?.name || 'error') + ')',
+    })
   }
 }
 
@@ -126,7 +162,11 @@ const capture = async () => {
   }
 
   if (!descriptor.value) {
-    Swal.fire({ icon: 'warning', title: 'No face detected', text: 'Center the face with good lighting, then Capture again.' })
+    Swal.fire({
+      icon: 'warning',
+      title: 'No face detected',
+      text: 'Center the face with good lighting, then Capture again.',
+    })
     return
   }
   canvas.toBlob(
@@ -153,12 +193,24 @@ const save = async () => {
   if (!descriptor.value) return
   saving.value = true
   try {
-    await api.post(`/api/attendance/face/${props.employeeId}`, { descriptor: descriptor.value.join(',') })
-    Swal.fire({ icon: 'success', title: 'Enrolled', text: 'Face registered successfully.', timer: 1800, showConfirmButton: false })
+    await api.post(`/api/attendance/face/${props.employeeId}`, {
+      descriptor: descriptor.value.join(','),
+    })
+    Swal.fire({
+      icon: 'success',
+      title: 'Enrolled',
+      text: 'Face registered successfully.',
+      timer: 1800,
+      showConfirmButton: false,
+    })
     emit('enrolled')
     close()
   } catch (err) {
-    Swal.fire({ icon: 'error', title: 'Failed', text: err.response?.data?.message || 'Could not save enrollment' })
+    Swal.fire({
+      icon: 'error',
+      title: 'Failed',
+      text: err.response?.data?.message || 'Could not save enrollment',
+    })
   } finally {
     saving.value = false
   }

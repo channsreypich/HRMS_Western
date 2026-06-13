@@ -4,19 +4,21 @@
       <div class="detail-head">
         <div>
           <button class="back-link" @click="router.push('/reports')">
-            <i class="fas fa-arrow-left"></i> Back to Reports
+            <VsxIcon iconName="ArrowLeft" :size="18" /> Back to Reports
           </button>
           <h1 class="page-title">{{ def?.title || 'Report' }}</h1>
           <p class="page-subtitle">Live data from the HRMS backend</p>
         </div>
         <button class="btn-primary" @click="load" :disabled="store.loading">
-          <i class="fas fa-rotate"></i> Refresh
+          <VsxIcon iconName="Refresh2" :size="18" /> Refresh
         </button>
       </div>
 
       <div v-if="store.loading" class="state-card">Loading report…</div>
       <div v-else-if="store.error" class="state-card error">{{ store.error }}</div>
-      <div v-else-if="!store.rows.length" class="state-card">No data available for this report yet.</div>
+      <div v-else-if="!store.rows.length" class="state-card">
+        No data available for this report yet.
+      </div>
 
       <template v-else>
         <div class="light-card chart-card">
@@ -89,7 +91,7 @@ function renderChart() {
         {
           label: cols[1]?.label || cols[0].label,
           data,
-          backgroundColor: ['#6823ff', '#0284c7', '#d97706', '#dc2626', '#16a34a', '#7c3aed'],
+          backgroundColor: ['#4f7cff', '#0284c7', '#d97706', '#dc2626', '#16a34a', '#4f7cff'],
           borderRadius: 6,
         },
       ],
@@ -122,7 +124,7 @@ watch(reportKey, load)
 .back-link {
   background: none;
   border: none;
-  color: #6823ff;
+  color: var(--accent);
   cursor: pointer;
   font-size: 0.85rem;
   padding: 0;
@@ -138,7 +140,7 @@ watch(reportKey, load)
   font-size: 0.88rem;
 }
 .btn-primary {
-  background: linear-gradient(135deg, #6823ff, #13707f);
+  background: linear-gradient(135deg, var(--accent), #64748b);
   color: #fff;
   border: none;
   border-radius: 10px;

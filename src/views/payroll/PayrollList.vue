@@ -4,16 +4,16 @@
       <div class="page-header">
         <div>
           <h1 class="page-title">
-            <i class="fas fa-money-bill-wave me-2 text-gradient"></i>Payroll
+            <VsxIcon iconName="Moneys" :size="18" class="me-2 text-gradient" />Payroll
           </h1>
           <p class="page-sub">Manage employee salaries and payroll processing</p>
         </div>
         <div class="header-actions">
           <button class="btn-outline" @click="exportPayroll">
-            <i class="fas fa-download"></i> Export
+            <VsxIcon iconName="DocumentDownload" :size="18" /> Export
           </button>
           <button class="btn-primary" @click="processPayroll" :disabled="payrollStore.loading">
-            <i class="fas fa-cog"></i> Process Payroll
+            <VsxIcon iconName="Setting2" :size="18" /> Process Payroll
           </button>
         </div>
       </div>
@@ -21,7 +21,7 @@
       <div class="summary-grid">
         <div class="sum-card" v-for="s in summaryCards" :key="s.label" :style="{ '--c': s.color }">
           <div class="sum-icon" :style="{ background: s.color + '12' }">
-            <i :class="s.icon" :style="{ color: s.color }"></i>
+            <VsxIcon :iconName="s.icon" :size="22" :style="{ color: s.color }" />
           </div>
           <div class="sum-body">
             <div class="sum-value">{{ s.value }}</div>
@@ -32,7 +32,7 @@
 
       <div class="light-card toolbar">
         <div class="search-wrap">
-          <i class="fas fa-search si"></i>
+          <VsxIcon iconName="SearchNormal1" :size="18" class="si" />
           <input type="text" class="search-inp" placeholder="Search employee..." v-model="search" />
         </div>
         <select class="filter-sel" v-model="selectedMonth">
@@ -65,14 +65,34 @@
           <table class="light-table">
             <thead>
               <tr>
-                <th>Employee</th>
-                <th>Department</th>
-                <th>Basic Salary</th>
-                <th>Allowances</th>
-                <th>Gross Salary</th>
-                <th>Deductions</th>
-                <th>Net Salary</th>
-                <th>Status</th>
+                <th class="sortable" @click="toggle('name')">
+                  Employee <VsxIcon :iconName="sortIcon('name')" :size="14" class="sort-ic" />
+                </th>
+                <th class="sortable" @click="toggle('department_name')">
+                  Department
+                  <VsxIcon :iconName="sortIcon('department_name')" :size="14" class="sort-ic" />
+                </th>
+                <th class="sortable" @click="toggle('base_salary')">
+                  Basic Salary
+                  <VsxIcon :iconName="sortIcon('base_salary')" :size="14" class="sort-ic" />
+                </th>
+                <th class="sortable" @click="toggle('allowances')">
+                  Allowances
+                  <VsxIcon :iconName="sortIcon('allowances')" :size="14" class="sort-ic" />
+                </th>
+                <th class="sortable" @click="toggle('gross')">
+                  Gross Salary <VsxIcon :iconName="sortIcon('gross')" :size="14" class="sort-ic" />
+                </th>
+                <th class="sortable" @click="toggle('deductions')">
+                  Deductions
+                  <VsxIcon :iconName="sortIcon('deductions')" :size="14" class="sort-ic" />
+                </th>
+                <th class="sortable" @click="toggle('net_salary')">
+                  Net Salary <VsxIcon :iconName="sortIcon('net_salary')" :size="14" class="sort-ic" />
+                </th>
+                <th class="sortable" @click="toggle('status')">
+                  Status <VsxIcon :iconName="sortIcon('status')" :size="14" class="sort-ic" />
+                </th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -114,7 +134,9 @@
                 <td>
                   <span
                     class="status-badge"
-                    :class="(rec.status || '').toLowerCase() === 'paid' ? 'status-paid' : 'status-pending'"
+                    :class="
+                      (rec.status || '').toLowerCase() === 'paid' ? 'status-paid' : 'status-pending'
+                    "
                     @click="toggleStatus(rec)"
                     style="cursor: pointer"
                   >
@@ -124,7 +146,7 @@
                 <td>
                   <div class="action-btns">
                     <button class="btn-icon" @click="viewPayslip(rec.id)" title="View Payslip">
-                      <i class="fas fa-file-invoice"></i>
+                      <VsxIcon iconName="ReceiptText" :size="18" />
                     </button>
                   </div>
                 </td>
@@ -140,7 +162,7 @@
           </div>
           <div class="page-btns">
             <button class="page-btn" :disabled="page === 1" @click="page--">
-              <i class="fas fa-chevron-left"></i>
+              <VsxIcon iconName="ArrowLeft2" :size="18" />
             </button>
             <button
               v-for="p in totalPages"
@@ -152,7 +174,7 @@
               {{ p }}
             </button>
             <button class="page-btn" :disabled="page === totalPages" @click="page++">
-              <i class="fas fa-chevron-right"></i>
+              <VsxIcon iconName="ArrowRight2" :size="18" />
             </button>
           </div>
         </div>
@@ -166,6 +188,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import MainLayout from '@/components/layouts/MainLayout.vue'
 import { usePayrollStore } from '@/stores/payroll'
+import { useTableSort } from '@/composables/useTableSort'
 import { toast } from 'vue3-toastify'
 
 const payrollStore = usePayrollStore()
@@ -204,7 +227,7 @@ const getInitials = (first, last) =>
   ((first?.charAt(0) || '') + (last?.charAt(0) || '')).toUpperCase()
 const getAvatarGradient = (name) => {
   const g = [
-    'linear-gradient(135deg, #6823ff, #4f0fdb)',
+    'linear-gradient(135deg, #4f7cff, #3b62d4)',
     'linear-gradient(135deg, #0284c7, #0369a1)',
     'linear-gradient(135deg, #e11d48, #be123c)',
     'linear-gradient(135deg, #d97706, #b45309)',
@@ -227,25 +250,25 @@ const summaryCards = computed(() => {
     {
       label: 'Total Payroll Expense',
       value: '$' + formatNum(totalPayroll),
-      icon: 'fas fa-money-bill-wave',
-      color: '#6823ff',
+      icon: 'Moneys',
+      color: '#4f7cff',
     },
     {
       label: 'Avg Basic Salary',
       value: '$' + formatNum(avgBasic),
-      icon: 'fas fa-chart-bar',
+      icon: 'Chart2',
       color: '#0284c7',
     },
     {
       label: 'Paid Enrolled',
       value: paidCount + ' employees',
-      icon: 'fas fa-check-circle',
+      icon: 'TickCircle',
       color: '#16a34a',
     },
     {
       label: 'Pending Process',
       value: pendingCount + ' employees',
-      icon: 'fas fa-hourglass-half',
+      icon: 'Timer',
       color: '#d97706',
     },
   ]
@@ -265,12 +288,19 @@ const filtered = computed(() => {
   })
 })
 
+const { toggle, sortIcon, sorted: sortedFiltered } = useTableSort(filtered, {
+  accessors: {
+    name: (r) => `${r.first_name || ''} ${r.last_name || ''}`.trim(),
+    gross: (r) => Number(r.base_salary || 0) + Number(r.allowances || 0),
+  },
+})
+
 const totalNet = computed(() =>
   filtered.value.reduce((s, r) => s + parseFloat(r.net_salary || 0), 0),
 )
 const totalPages = computed(() => Math.ceil(filtered.value.length / perPage))
 const paginated = computed(() =>
-  filtered.value.slice((page.value - 1) * perPage, page.value * perPage),
+  sortedFiltered.value.slice((page.value - 1) * perPage, page.value * perPage),
 )
 
 const viewPayslip = (id) => router.push(`/payroll/${id}/payslip`)
@@ -302,6 +332,11 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.light-table th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+.light-table th.sortable:hover { color: var(--accent); }
+.sort-ic { opacity: 0.55; vertical-align: -2px; }
+.light-table th.sortable:hover .sort-ic { opacity: 1; }
+
 /* Main Canvas Layer */
 .payroll-container {
   padding: 2rem;
@@ -313,7 +348,7 @@ onMounted(() => {
   background-color: #f8fafc;
   min-height: 100vh;
   font-family:
-    'Inter',
+    'Plus Jakarta Sans',
     system-ui,
     -apple-system,
     sans-serif;
@@ -336,7 +371,7 @@ onMounted(() => {
   margin: 0;
 }
 .text-gradient {
-  background: linear-gradient(135deg, #6823ff, #0284c7);
+  background: linear-gradient(135deg, var(--accent), #0284c7);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -353,7 +388,7 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: 0.65rem 1.25rem;
-  background: linear-gradient(135deg, #6823ff, #4f0fdb);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   border: none;
   border-radius: 10px;
   color: white;
@@ -361,10 +396,10 @@ onMounted(() => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 14px rgba(104, 35, 255, 0.25);
+  box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.25);
 }
 .btn-primary:hover:not(:disabled) {
-  box-shadow: 0 6px 18px rgba(104, 35, 255, 0.35);
+  box-shadow: 0 6px 18px rgba(var(--accent-rgb), 0.35);
   transform: translateY(-1px);
 }
 .btn-primary:disabled {
@@ -484,8 +519,8 @@ onMounted(() => {
   color: #94a3b8;
 }
 .search-inp:focus {
-  border-color: #6823ff;
-  box-shadow: 0 0 0 3px rgba(104, 35, 255, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
 }
 .filter-sel {
   padding: 0.6rem 1.5rem 0.6rem 0.9rem;
@@ -500,7 +535,7 @@ onMounted(() => {
   transition: all 0.2s;
 }
 .filter-sel:focus {
-  border-color: #6823ff;
+  border-color: var(--accent);
 }
 
 /* Registry Header Indicators */
@@ -517,12 +552,12 @@ onMounted(() => {
 }
 .count-badge {
   background: #eeebff;
-  color: #6823ff;
+  color: var(--accent);
   padding: 3px 10px;
   border-radius: 12px;
   font-size: 0.75rem;
   font-weight: 700;
-  border: 1px solid rgba(104, 35, 255, 0.1);
+  border: 1px solid rgba(var(--accent-rgb), 0.1);
 }
 .total-row-label {
   font-size: 0.875rem;
@@ -530,7 +565,7 @@ onMounted(() => {
   font-weight: 500;
 }
 .total-amount {
-  color: #6823ff;
+  color: var(--accent);
   font-size: 1.15rem;
   font-weight: 800;
 }
@@ -627,7 +662,7 @@ onMounted(() => {
   font-weight: 700;
 }
 .amount-cell.net {
-  color: #6823ff;
+  color: var(--accent);
   font-size: 0.95rem;
   font-weight: 800;
 }
@@ -672,8 +707,8 @@ onMounted(() => {
 }
 .btn-icon:hover {
   background: #eeebff;
-  color: #6823ff;
-  border-color: rgba(104, 35, 255, 0.25);
+  color: var(--accent);
+  border-color: rgba(var(--accent-rgb), 0.25);
 }
 
 /* Loader States */
@@ -688,7 +723,7 @@ onMounted(() => {
   width: 32px;
   height: 32px;
   border: 3px solid #e2e8f0;
-  border-top-color: #6823ff;
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin: 0 auto 0.75rem;
@@ -734,8 +769,8 @@ onMounted(() => {
 }
 .page-btn.active {
   background: #eeebff;
-  color: #6823ff;
-  border-color: rgba(104, 35, 255, 0.25);
+  color: var(--accent);
+  border-color: rgba(var(--accent-rgb), 0.25);
   font-weight: 700;
 }
 .page-btn:disabled {

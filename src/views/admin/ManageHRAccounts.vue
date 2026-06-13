@@ -4,7 +4,7 @@
       <div class="page-header fade-in">
         <div class="header-text">
           <h1 class="page-title">
-            <i class="fas fa-user-shield me-2 icon-gradient"></i>
+            <VsxIcon iconName="SecurityUser" :size="18" class="me-2 icon-gradient" />
             <span class="text-gradient">HR Accounts Management</span>
           </h1>
           <p class="page-subtitle text-muted">
@@ -12,7 +12,7 @@
           </p>
         </div>
         <button class="btn-create" @click="openCreateModal">
-          <i class="fas fa-user-plus me-2"></i> Register New HR
+          <VsxIcon iconName="UserAdd" :size="18" class="me-2" /> Register New HR
         </button>
       </div>
 
@@ -37,7 +37,7 @@
                 <td>{{ hr.email }}</td>
                 <td>
                   <span class="badge-role" :class="hr.role === 'Admin' ? 'role-admin' : 'role-hr'">
-                    <i :class="hr.role === 'Admin' ? 'fas fa-crown' : 'fas fa-user-tie'"></i>
+                    <VsxIcon :iconName="hr.role === 'Admin' ? 'Crown' : 'UserTag'" :size="18" />
                     {{ hr.role }}
                   </span>
                 </td>
@@ -46,7 +46,7 @@
                     class="status-badge"
                     :class="hr.status === 'Active' ? 'status-active' : 'status-inactive'"
                   >
-                    <i class="fas fa-circle me-1" style="font-size: 0.5rem"></i>
+                    <VsxIcon iconName="Record" :size="8" class="me-1" />
                     {{ hr.status }}
                   </span>
                 </td>
@@ -58,9 +58,10 @@
                     @click="handleToggleStatus(hr.id, hr.status)"
                     :disabled="hr.role === 'Admin'"
                   >
-                    <i
-                      :class="hr.status === 'Active' ? 'fas fa-user-slash' : 'fas fa-user-check'"
-                    ></i>
+                    <VsxIcon
+                      :iconName="hr.status === 'Active' ? 'UserRemove' : 'UserTick'"
+                      :size="18"
+                    />
                     {{ hr.status === 'Active' ? ' Deactivate' : ' Activate' }}
                   </button>
 
@@ -69,7 +70,7 @@
                     @click="handleDeleteUser(hr.id)"
                     :disabled="hr.role === 'Admin'"
                   >
-                    <i class="fas fa-trash-alt"></i>
+                    <VsxIcon iconName="Trash" :size="18" />
                   </button>
                 </td>
               </tr>
@@ -86,8 +87,13 @@
       <div v-if="showModal" class="modal-overlay">
         <div class="light-modal">
           <div class="modal-header">
-            <h3><i class="fas fa-user-plus me-2 text-purple"></i> Register HR Operator</h3>
-            <button class="btn-close" @click="closeModal"><i class="fas fa-times"></i></button>
+            <h3>
+              <VsxIcon iconName="UserAdd" :size="18" class="me-2 text-purple" /> Register HR
+              Operator
+            </h3>
+            <button class="btn-close" @click="closeModal">
+              <VsxIcon iconName="CloseCircle" :size="18" />
+            </button>
           </div>
 
           <form @submit.prevent="submitCreateHR" class="mt-3">
@@ -166,7 +172,7 @@ const fetchHRUsers = async () => {
       text: err.response?.data?.message || 'Unable to reach the server.',
       background: '#ffffff',
       color: '#1a1a1a',
-      confirmButtonColor: '#6823ff',
+      confirmButtonColor: '#4f7cff',
     })
   }
 }
@@ -205,7 +211,7 @@ const submitCreateHR = async () => {
         text: 'The new HR account has been successfully created and activated.',
         background: '#ffffff',
         color: '#1a1a1a',
-        confirmButtonColor: '#6823ff',
+        confirmButtonColor: '#4f7cff',
       })
       closeModal()
       await fetchHRUsers() // refresh from DB so the table reflects persisted data
@@ -217,7 +223,7 @@ const submitCreateHR = async () => {
       text: err.response?.data?.message || 'Something went wrong',
       background: '#ffffff',
       color: '#1a1a1a',
-      confirmButtonColor: '#6823ff',
+      confirmButtonColor: '#4f7cff',
     })
   } finally {
     isSubmitting.value = false
@@ -234,7 +240,7 @@ const handleToggleStatus = async (userId, currentStatus) => {
     text: `Do you want to ${textAlert} this HR account access?`,
     icon: 'question',
     showCancelButton: true,
-    confirmButtonColor: '#6823ff',
+    confirmButtonColor: '#4f7cff',
     cancelButtonColor: '#e2e8f0',
     confirmButtonText: `Yes, ${textAlert}!`,
     background: '#ffffff',
@@ -251,7 +257,7 @@ const handleToggleStatus = async (userId, currentStatus) => {
         title: 'Status Updated!',
         background: '#ffffff',
         color: '#1a1a1a',
-        confirmButtonColor: '#6823ff',
+        confirmButtonColor: '#4f7cff',
       })
       await fetchHRUsers()
     }
@@ -262,7 +268,7 @@ const handleToggleStatus = async (userId, currentStatus) => {
       icon: 'error',
       background: '#ffffff',
       color: '#1a1a1a',
-      confirmButtonColor: '#6823ff',
+      confirmButtonColor: '#4f7cff',
     })
   }
 }
@@ -290,7 +296,7 @@ const handleDeleteUser = async (userId) => {
       icon: 'success',
       background: '#ffffff',
       color: '#1a1a1a',
-      confirmButtonColor: '#6823ff',
+      confirmButtonColor: '#4f7cff',
     })
     await fetchHRUsers()
   } catch (err) {
@@ -300,7 +306,7 @@ const handleDeleteUser = async (userId) => {
       icon: 'error',
       background: '#ffffff',
       color: '#1a1a1a',
-      confirmButtonColor: '#6823ff',
+      confirmButtonColor: '#4f7cff',
     })
   }
 }
@@ -322,13 +328,13 @@ onMounted(() => {
   gap: 1rem;
 }
 .text-gradient {
-  background: linear-gradient(135deg, #531cbd 0%, #11606d 100%);
+  background: linear-gradient(135deg, var(--accent-strong) 0%, #475569 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 .icon-gradient {
-  color: #531cbd;
+  color: var(--accent-strong);
 }
 .page-subtitle {
   color: #64748b !important;
@@ -337,7 +343,7 @@ onMounted(() => {
 }
 
 .btn-create {
-  background: linear-gradient(135deg, #6823ff 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, #6f97ff 100%);
   border: none;
   color: #fff;
   padding: 10px 20px;
@@ -348,7 +354,7 @@ onMounted(() => {
 }
 .btn-create:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(104, 35, 255, 0.25);
+  box-shadow: 0 4px 15px rgba(var(--accent-rgb), 0.25);
 }
 
 .table-panel {
@@ -398,8 +404,8 @@ onMounted(() => {
   color: #b45309;
 }
 .role-hr {
-  background: rgba(104, 35, 255, 0.1);
-  color: #6823ff;
+  background: rgba(var(--accent-rgb), 0.1);
+  color: var(--accent);
 }
 
 .status-badge {
@@ -487,7 +493,7 @@ onMounted(() => {
   margin: 0;
 }
 .text-purple {
-  color: #6823ff !important;
+  color: var(--accent) !important;
 }
 .btn-close {
   background: none;
@@ -520,8 +526,8 @@ onMounted(() => {
 }
 .form-input-custom:focus {
   background: #ffffff;
-  border-color: #6823ff;
-  box-shadow: 0 0 0 3px rgba(104, 35, 255, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
 }
 .form-input-custom::placeholder {
   color: #94a3b8;
@@ -542,7 +548,7 @@ onMounted(() => {
   color: #1a1a1a;
 }
 .btn-submit {
-  background: #6823ff;
+  background: var(--accent);
   border: none;
   color: #fff;
   padding: 10px 20px;
@@ -552,8 +558,8 @@ onMounted(() => {
   transition: 0.2s;
 }
 .btn-submit:hover {
-  background: #531cbd;
-  box-shadow: 0 4px 12px rgba(104, 35, 255, 0.2);
+  background: var(--accent-strong);
+  box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.2);
 }
 
 .fade-in {
