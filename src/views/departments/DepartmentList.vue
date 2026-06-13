@@ -3,17 +3,19 @@
     <div class="dept-container">
       <div class="page-header">
         <div>
-          <h1 class="page-title"><i class="fas fa-building me-2 text-gradient"></i>Departments</h1>
+          <h1 class="page-title">
+            <VsxIcon iconName="Building" :size="18" class="me-2 text-gradient" />Departments
+          </h1>
           <p class="page-sub">Manage your organizational structure</p>
         </div>
         <button class="btn-primary" @click="openCreate">
-          <i class="fas fa-plus-circle"></i> Add Department
+          <VsxIcon iconName="AddCircle" :size="18" /> Add Department
         </button>
       </div>
 
       <div class="stats-row">
         <div class="stat-pill" v-for="s in headerStats" :key="s.label">
-          <i :class="s.icon" :style="{ color: s.color }"></i>
+          <VsxIcon :iconName="s.icon" :size="22" :style="{ color: s.color }" />
           <div>
             <div class="stat-num">{{ s.value }}</div>
             <div class="stat-lbl">{{ s.label }}</div>
@@ -23,7 +25,7 @@
 
       <div class="toolbar dark-card">
         <div class="search-wrap">
-          <i class="fas fa-search si"></i>
+          <VsxIcon iconName="SearchNormal1" :size="18" class="si" />
           <input
             type="text"
             class="search-inp"
@@ -33,13 +35,13 @@
         </div>
         <div class="view-toggle">
           <button :class="['view-btn', { active: viewMode === 'grid' }]" @click="viewMode = 'grid'">
-            <i class="fas fa-th-large"></i>
+            <VsxIcon iconName="Category" :size="18" />
           </button>
           <button
             :class="['view-btn', { active: viewMode === 'table' }]"
             @click="viewMode = 'table'"
           >
-            <i class="fas fa-list"></i>
+            <VsxIcon iconName="TaskSquare" :size="18" />
           </button>
         </div>
       </div>
@@ -51,46 +53,34 @@
 
       <template v-else>
         <div v-if="viewMode === 'grid'" class="dept-grid">
-          <div class="dept-card" v-for="(dept, index) in filtered" :key="dept.id">
-            <div class="dept-color-bar" :style="{ background: dept.color }"></div>
-            <div class="dept-card-body">
-              <div class="dept-top">
-                <div class="dept-icon-wrap" :style="{ background: dept.color + '20' }">
-                  <i class="fas fa-building" :style="{ color: dept.color }"></i>
-                </div>
-                <div class="dept-actions-menu">
-                  <button class="btn-icon" @click="openEdit(dept)" title="Edit">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button class="btn-icon danger" @click="confirmDelete(dept)" title="Delete">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </div>
+          <div class="kpi-card" v-for="dept in filtered" :key="dept.id">
+            <div class="kpi-bar" :style="{ background: dept.color }"></div>
+            <div class="kpi-top">
+              <div class="kpi-icon" :style="{ background: dept.color + '18', color: dept.color }">
+                <VsxIcon iconName="Buildings2" :size="22" type="bold" />
               </div>
-              <div class="dept-code">{{ dept.code }}</div>
-              <h3 class="dept-name">{{ dept.name }}</h3>
-
-              <p class="dept-desc" :style="{ color: 'rgba(255,255,255,0.45)' }">
-                The official operational hub for the
-                <span :style="{ color: dept.color, fontWeight: '600' }">{{ dept.name }}</span> core
-                framework.
-              </p>
-
-              <div class="dept-meta">
-                <div class="meta-item">
-                  <i class="fas fa-calendar-alt"></i>
-                  <span>Created: {{ formatDate(dept.created_at) }}</span>
-                </div>
+              <div class="kpi-actions">
+                <button class="btn-icon" @click="openEdit(dept)" title="Edit">
+                  <VsxIcon iconName="Edit2" :size="16" />
+                </button>
+                <button class="btn-icon danger" @click="confirmDelete(dept)" title="Delete">
+                  <VsxIcon iconName="Trash" :size="16" />
+                </button>
               </div>
-              <div class="dept-footer">
-                <span class="status-badge badge-active">active</span>
-                <span class="budget-label">No: {{ index + 1 }}</span>
-              </div>
+            </div>
+            <div class="kpi-value" :style="{ color: dept.color }">{{ memberCount(dept) }}</div>
+            <div class="kpi-metric-label">Employees</div>
+            <h3 class="kpi-name">{{ dept.name }}</h3>
+            <div class="kpi-foot">
+              <span class="code-chip" :style="{ color: dept.color, background: dept.color + '14' }">
+                {{ dept.code }}
+              </span>
+              <span class="kpi-date">{{ formatDate(dept.created_at) }}</span>
             </div>
           </div>
 
           <div v-if="filtered.length === 0" class="empty-state">
-            <i class="fas fa-building fa-3x"></i>
+            <VsxIcon iconName="Buildings2" :size="44" />
             <p>No departments found</p>
             <button class="btn-primary btn-sm" @click="openCreate">Add Department</button>
           </div>
@@ -102,15 +92,23 @@
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Code</th>
-                  <th>Department Name</th>
-                  <th>Created Date</th>
+                  <th class="sortable" @click="toggle('code')">
+                    Code <VsxIcon :iconName="sortIcon('code')" :size="14" class="sort-ic" />
+                  </th>
+                  <th class="sortable" @click="toggle('name')">
+                    Department Name
+                    <VsxIcon :iconName="sortIcon('name')" :size="14" class="sort-ic" />
+                  </th>
+                  <th class="sortable" @click="toggle('created_at')">
+                    Created Date
+                    <VsxIcon :iconName="sortIcon('created_at')" :size="14" class="sort-ic" />
+                  </th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(dept, index) in filtered" :key="dept.id">
+                <tr v-for="(dept, index) in sortedDepts" :key="dept.id">
                   <td>
                     <span class="emp-id">{{ index + 1 }}</span>
                   </td>
@@ -138,10 +136,10 @@
                   <td>
                     <div class="action-buttons">
                       <button class="btn-icon" @click="openEdit(dept)">
-                        <i class="fas fa-edit"></i>
+                        <VsxIcon iconName="Edit2" :size="18" />
                       </button>
                       <button class="btn-icon danger" @click="confirmDelete(dept)">
-                        <i class="fas fa-trash"></i>
+                        <VsxIcon iconName="Trash" :size="18" />
                       </button>
                     </div>
                   </td>
@@ -160,7 +158,9 @@
       <div class="modal-box">
         <div class="modal-head">
           <h3>{{ editingDept ? 'Edit Department' : 'Add Department' }}</h3>
-          <button class="close-btn" @click="showModal = false"><i class="fas fa-times"></i></button>
+          <button class="close-btn" @click="showModal = false">
+            <VsxIcon iconName="CloseCircle" :size="18" />
+          </button>
         </div>
         <form @submit.prevent="saveDept" class="modal-form">
           <div class="form-row">
@@ -217,11 +217,11 @@
         <div class="modal-head">
           <h3>Delete Department</h3>
           <button class="close-btn" @click="showDeleteModal = false">
-            <i class="fas fa-times"></i>
+            <VsxIcon iconName="CloseCircle" :size="18" />
           </button>
         </div>
         <div class="delete-body">
-          <div class="delete-icon-wrap"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="delete-icon-wrap"><VsxIcon iconName="Warning2" :size="18" /></div>
           <p>
             Are you sure you want to delete <strong>{{ deletingDept?.name }}</strong
             >?
@@ -245,9 +245,18 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import MainLayout from '@/components/layouts/MainLayout.vue'
 import { useDepartmentStore } from '@/stores/department'
+import { useEmployeeStore } from '@/stores/employee'
+import { useTableSort } from '@/composables/useTableSort'
 import { toast } from 'vue3-toastify'
 
 const deptStore = useDepartmentStore()
+const employeeStore = useEmployeeStore()
+
+// Real headcount per department (KPI metric on each card).
+const memberCount = (dept) =>
+  (employeeStore.employees || []).filter(
+    (e) => e.department_id === dept.id || e.department_name === dept.name,
+  ).length
 const search = ref('')
 const viewMode = ref('grid')
 const showModal = ref(false)
@@ -256,7 +265,7 @@ const editingDept = ref(null)
 const deletingDept = ref(null)
 
 const colorPresets = [
-  '#6823ff',
+  '#4f7cff',
   '#40c8da',
   '#fbbf24',
   '#f87171',
@@ -267,20 +276,20 @@ const colorPresets = [
 ]
 
 // 💡 Form reactive ផ្ទុកតែ Column ណាដែលមានពិតប្រាកដក្នុង MySQL Workbench របស់លីហ្សា
-const form = reactive({ name: '', code: '', color: '#6823ff' })
+const form = reactive({ name: '', code: '', color: '#4f7cff' })
 
 // 📊 គណនាស្ថិតិពិតៗចេញពី Database យកមកបង្ហាញលើក្បាលទំព័រ
 const headerStats = computed(() => [
   {
     label: 'Total Departments',
     value: deptStore.departments.length,
-    icon: 'fas fa-building',
-    color: '#6823ff',
+    icon: 'Building',
+    color: '#4f7cff',
   },
   {
     label: 'Active Depts',
     value: deptStore.departments.length,
-    icon: 'fas fa-check-circle',
+    icon: 'TickCircle',
     color: '#34d399',
   },
 ])
@@ -294,6 +303,8 @@ const filtered = computed(() => {
   )
 })
 
+const { toggle, sortIcon, sorted: sortedDepts } = useTableSort(filtered, { defaultKey: 'name' })
+
 const formatDate = (date) => {
   if (!date) return '—'
   return new Date(date).toLocaleDateString('en-US', {
@@ -305,7 +316,7 @@ const formatDate = (date) => {
 
 function openCreate() {
   editingDept.value = null
-  Object.assign(form, { name: '', code: '', color: '#6823ff' })
+  Object.assign(form, { name: '', code: '', color: '#4f7cff' })
   showModal.value = true
 }
 
@@ -351,13 +362,8 @@ async function deleteDept() {
 }
 
 onMounted(async () => {
-  console.log('=== 🔄 START FETCHING DEPARTMENTS FROM UI ===')
-
-  const resData = await deptStore.fetchDepartments()
-
-  console.log('Raw API Response Data:', resData)
-  console.log('Data inside Pinia Store:', deptStore.departments)
-  console.log('Error status if any:', deptStore.error)
+  await deptStore.fetchDepartments()
+  if (!employeeStore.employees?.length) employeeStore.fetchEmployees?.()
 })
 </script>
 
@@ -373,7 +379,7 @@ onMounted(async () => {
   background-color: #f8fafc;
   min-height: 100vh;
   font-family:
-    'Inter',
+    'Plus Jakarta Sans',
     system-ui,
     -apple-system,
     sans-serif;
@@ -396,7 +402,7 @@ onMounted(async () => {
   margin: 0;
 }
 .text-gradient {
-  background: linear-gradient(135deg, #6823ff, #0284c7);
+  background: linear-gradient(135deg, var(--accent), #0284c7);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -407,7 +413,7 @@ onMounted(async () => {
   align-items: center;
   gap: 7px;
   padding: 0.65rem 1.25rem;
-  background: linear-gradient(135deg, #6823ff, #4f0fdb);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   border: none;
   border-radius: 10px;
   color: white;
@@ -415,10 +421,10 @@ onMounted(async () => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 14px rgba(104, 35, 255, 0.25);
+  box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.25);
 }
 .btn-primary:hover:not(:disabled) {
-  box-shadow: 0 6px 18px rgba(104, 35, 255, 0.35);
+  box-shadow: 0 6px 18px rgba(var(--accent-rgb), 0.35);
   transform: translateY(-1px);
 }
 .btn-primary:disabled {
@@ -516,8 +522,8 @@ onMounted(async () => {
   transition: all 0.2s ease;
 }
 .search-inp:focus {
-  border-color: #6823ff;
-  box-shadow: 0 0 0 3px rgba(104, 35, 255, 0.12);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12);
 }
 .search-inp::placeholder {
   color: #94a3b8;
@@ -544,107 +550,100 @@ onMounted(async () => {
 }
 .view-btn.active {
   background: #ffffff;
-  color: #6823ff;
+  color: var(--accent);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-/* Department Grid Matrix Cards */
+/* KPI-style department cards */
 .dept-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 1.25rem;
 }
-.dept-card {
+.kpi-card {
+  position: relative;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 18px;
+  padding: 1.4rem 1.4rem 1.2rem;
   overflow: hidden;
   box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.02);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   animation: fadeUp 0.4s ease both;
 }
-.dept-card:hover {
+.kpi-card:hover {
   border-color: #cbd5e1;
-  transform: translateY(-3px);
-  box-shadow: 0 12px 24px -4px rgba(15, 23, 42, 0.08);
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px -10px rgba(15, 23, 42, 0.14);
 }
-.dept-color-bar {
+.kpi-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 4px;
 }
-.dept-card-body {
-  padding: 1.5rem;
-}
-.dept-top {
+.kpi-top {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 1rem;
 }
-.dept-icon-wrap {
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
+.kpi-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.15rem;
 }
-.dept-actions-menu {
+.kpi-actions {
   display: flex;
   gap: 6px;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
-.dept-code {
-  font-size: 0.75rem;
+.kpi-card:hover .kpi-actions {
+  opacity: 1;
+}
+.kpi-value {
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.kpi-metric-label {
+  font-size: 0.72rem;
   font-weight: 700;
-  color: #94a3b8;
-  letter-spacing: 0.5px;
   text-transform: uppercase;
-  margin-bottom: 4px;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  margin-top: 4px;
 }
-.dept-name {
-  font-size: 1.15rem;
+.kpi-name {
+  font-size: 1.05rem;
   font-weight: 700;
   color: #0f172a;
-  margin: 0 0 0.5rem 0;
+  margin: 0.9rem 0 0;
 }
-.dept-desc {
-  font-size: 0.85rem;
-  color: #475569 !important;
-  margin: 0 0 1.1rem 0;
-  line-height: 1.5;
-  min-height: 42px;
-}
-.dept-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 1.1rem;
-  border-top: 1px dashed #e2e8f0;
-  padding-top: 0.85rem;
-}
-.meta-item {
+.kpi-foot {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.8rem;
-  color: #64748b;
-}
-.meta-item i {
-  width: 14px;
-  color: #94a3b8;
-}
-.dept-footer {
-  display: flex;
   justify-content: space-between;
-  align-items: center;
-  background: #f8fafc;
-  margin: 0 -1.5rem -1.5rem -1.5rem;
-  padding: 0.85rem 1.5rem;
-  border-top: 1px solid #e2e8f0;
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed #e2e8f0;
 }
-.budget-label {
-  font-size: 0.75rem;
-  color: #64748b;
+.code-chip {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 7px;
+  letter-spacing: 0.03em;
+}
+.kpi-date {
+  font-size: 0.72rem;
+  color: #94a3b8;
   font-weight: 500;
 }
 
@@ -673,6 +672,21 @@ onMounted(async () => {
 }
 .dark-table tbody tr:hover td {
   background: #f8fafc;
+}
+.dark-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.dark-table th.sortable:hover {
+  color: var(--accent);
+}
+.sort-ic {
+  opacity: 0.55;
+  vertical-align: -2px;
+}
+.dark-table th.sortable:hover .sort-ic {
+  opacity: 1;
 }
 .dark-table tbody tr:last-child td {
   border-bottom: none;
@@ -746,7 +760,7 @@ onMounted(async () => {
 }
 .btn-icon:hover {
   background: #f1f5f9;
-  color: #6823ff;
+  color: var(--accent);
   border-color: #94a3b8;
 }
 .btn-icon.danger:hover {
@@ -766,8 +780,7 @@ onMounted(async () => {
   align-items: center;
   gap: 1rem;
 }
-.empty-state i {
-  font-size: 3rem;
+.empty-state :deep(svg) {
   color: #cbd5e1;
 }
 
@@ -855,8 +868,8 @@ onMounted(async () => {
   transition: all 0.2s ease;
 }
 .form-field input:focus {
-  border-color: #6823ff;
-  box-shadow: 0 0 0 3px rgba(104, 35, 255, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
 }
 .form-field input::placeholder {
   color: #cbd5e1;
@@ -935,8 +948,7 @@ onMounted(async () => {
   margin: 0 auto 1.25rem;
   border: 1px solid #fee2e2;
 }
-.delete-icon-wrap i {
-  font-size: 1.4rem;
+.delete-icon-wrap :deep(svg) {
   color: #ef4444;
 }
 .delete-body p {
@@ -981,7 +993,7 @@ onMounted(async () => {
   width: 32px;
   height: 32px;
   border: 3px solid #e2e8f0;
-  border-top-color: #6823ff;
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin: 0 auto 1rem;

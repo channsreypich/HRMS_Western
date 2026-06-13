@@ -3,7 +3,7 @@
     <div class="dashboard-container">
       <div class="light-card header-section fade-in">
         <h1 class="page-title">
-          <i class="fas fa-crown me-2" style="color: #6823ff"></i>
+          <VsxIcon iconName="Crown" :size="18" class="me-2" style="color: var(--accent)" />
           <span class="text-gradient">Super Admin Control Console</span>
         </h1>
         <p class="page-subtitle text-muted">
@@ -19,11 +19,11 @@
 
               <h3 class="metric-value text-dark">{{ hrCount }} Users</h3>
               <span class="metric-subtext text-purple"
-                >Manage HR Accounts <i class="fas fa-arrow-right ms-1"></i
-              ></span>
+                >Manage HR Accounts <VsxIcon iconName="ArrowRight" :size="16" class="ms-1" />
+              </span>
             </div>
             <div class="metric-icon-box bg-purple-light">
-              <i class="fas fa-user-shield" style="color: #6823ff"></i>
+              <VsxIcon iconName="SecurityUser" :size="18" style="color: var(--accent)" />
             </div>
           </div>
         </div>
@@ -31,16 +31,17 @@
 
       <div class="light-card mt-4 fade-in">
         <h4 class="section-title mb-4">
-          <i class="fas fa-bolt me-2 text-warning-dark"></i> Quick Management Actions
+          <VsxIcon iconName="Flash" :size="18" class="me-2 text-warning-dark" /> Quick Management
+          Actions
         </h4>
         <div class="action-grid">
           <div class="action-item" @click="$router.push('/manage-hr')">
-            <i class="fas fa-user-plus fa-lg mb-2" style="color: #6823ff"></i>
+            <VsxIcon iconName="UserAdd" :size="20" class="mb-2" style="color: var(--accent)" />
             <h5>Register HR Account</h5>
             <p class="text-muted">Create new logins for system operators</p>
           </div>
           <div class="action-item" @click="$router.push('/manage-hr')">
-            <i class="fas fa-user-slash fa-lg mb-2 text-warning-dark"></i>
+            <VsxIcon iconName="UserRemove" :size="20" class="mb-2 text-warning-dark" />
             <h5>Deactivate System Access</h5>
             <p class="text-muted">Instantly block or revoke access permissions</p>
           </div>
@@ -80,7 +81,7 @@ onMounted(() => {
   color: #1a1a1a;
 }
 .text-gradient {
-  background: linear-gradient(135deg, #531cbd 0%, #11606d 100%);
+  background: linear-gradient(135deg, var(--accent-strong) 0%, #475569 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -120,9 +121,9 @@ onMounted(() => {
 }
 .clickable-card:hover {
   transform: translateY(-3px);
-  border-color: rgba(104, 35, 255, 0.3);
-  background: rgba(104, 35, 255, 0.02);
-  box-shadow: 0 10px 15px -3px rgba(104, 35, 255, 0.05);
+  border-color: rgba(var(--accent-rgb), 0.3);
+  background: rgba(var(--accent-rgb), 0.02);
+  box-shadow: 0 10px 15px -3px rgba(var(--accent-rgb), 0.05);
 }
 
 .metric-content {
@@ -148,7 +149,7 @@ onMounted(() => {
   color: #64748b;
 }
 .text-purple {
-  color: #6823ff !important;
+  color: var(--accent) !important;
   font-weight: 500;
 }
 
@@ -162,7 +163,7 @@ onMounted(() => {
   font-size: 1.1rem;
 }
 .bg-purple-light {
-  background: rgba(104, 35, 255, 0.06);
+  background: rgba(var(--accent-rgb), 0.06);
 }
 
 .section-title {
@@ -184,8 +185,8 @@ onMounted(() => {
   transition: 0.2s;
 }
 .action-item:hover {
-  background: rgba(104, 35, 255, 0.03);
-  border-color: rgba(104, 35, 255, 0.15);
+  background: rgba(var(--accent-rgb), 0.03);
+  border-color: rgba(var(--accent-rgb), 0.15);
   transform: scale(1.02);
 }
 .action-item h5 {

@@ -3,17 +3,19 @@
     <div class="pos-container">
       <div class="page-header">
         <div>
-          <h1 class="page-title"><i class="fas fa-briefcase me-2 text-gradient"></i>Positions</h1>
+          <h1 class="page-title">
+            <VsxIcon iconName="Briefcase" :size="18" class="me-2 text-gradient" />Positions
+          </h1>
           <p class="page-sub">Manage job titles and base salary ranges</p>
         </div>
         <button class="btn-primary" @click="openCreate">
-          <i class="fas fa-plus-circle"></i> Add Position
+          <VsxIcon iconName="AddCircle" :size="18" /> Add Position
         </button>
       </div>
 
       <div class="stats-row">
         <div class="stat-pill" v-for="s in stats" :key="s.label">
-          <i :class="s.icon" :style="{ color: s.color }"></i>
+          <VsxIcon :iconName="s.icon" :size="22" :style="{ color: s.color }" />
           <div>
             <div class="stat-num">{{ s.value }}</div>
             <div class="stat-lbl">{{ s.label }}</div>
@@ -23,7 +25,7 @@
 
       <div class="light-card toolbar">
         <div class="search-wrap">
-          <i class="fas fa-search si"></i>
+          <VsxIcon iconName="SearchNormal1" :size="18" class="si" />
           <input
             type="text"
             class="search-inp"
@@ -31,19 +33,70 @@
             v-model="search"
           />
         </div>
-        <button class="btn-outline" @click="search = ''">
-          <i class="fas fa-redo-alt"></i> Reset
-        </button>
+        <div class="toolbar-right">
+          <div class="view-toggle">
+            <button :class="['view-btn', { active: viewMode === 'grid' }]" @click="viewMode = 'grid'" title="Card view">
+              <VsxIcon iconName="Category" :size="18" />
+            </button>
+            <button :class="['view-btn', { active: viewMode === 'table' }]" @click="viewMode = 'table'" title="Table view">
+              <VsxIcon iconName="TaskSquare" :size="18" />
+            </button>
+          </div>
+          <button class="btn-outline" @click="search = ''">
+            <VsxIcon iconName="Refresh2" :size="18" /> Reset
+          </button>
+        </div>
       </div>
 
-      <div class="light-card">
+      <!-- KPI card view -->
+      <div v-if="viewMode === 'grid'" class="pos-grid">
+        <div v-if="positionStore.loading" class="empty-row w-100">Loading positions...</div>
+        <div v-else-if="filtered.length === 0" class="empty-state">
+          <VsxIcon iconName="Briefcase" :size="44" />
+          <p>No positions found</p>
+          <button class="btn-primary btn-sm" @click="openCreate">Add Position</button>
+        </div>
+        <div class="kpi-card" v-for="pos in sortedPos" :key="pos.id">
+          <div class="kpi-bar" :style="{ background: pos.dept_color || '#4f7cff' }"></div>
+          <div class="kpi-top">
+            <div
+              class="kpi-icon"
+              :style="{ background: (pos.dept_color || '#4f7cff') + '18', color: pos.dept_color || '#4f7cff' }"
+            >
+              <VsxIcon iconName="Briefcase" :size="22" type="bold" />
+            </div>
+            <div class="kpi-actions">
+              <button class="btn-icon" @click="openEdit(pos)" title="Edit">
+                <VsxIcon iconName="Edit2" :size="16" />
+              </button>
+              <button class="btn-icon danger" @click="confirmDelete(pos)" title="Delete">
+                <VsxIcon iconName="Trash" :size="16" />
+              </button>
+            </div>
+          </div>
+          <div class="kpi-value">${{ formatNum(pos.base_salary) }}</div>
+          <div class="kpi-metric-label">Base Salary / mo</div>
+          <h3 class="kpi-name">{{ pos.title }}</h3>
+          <div class="kpi-foot">
+            <span
+              class="code-chip"
+              :style="{ color: pos.dept_color || '#4f7cff', background: (pos.dept_color || '#4f7cff') + '14' }"
+            >
+              {{ pos.department_name || 'Unassigned' }}
+            </span>
+            <span class="kpi-members">{{ holderCount(pos) }} staff</span>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="light-card">
         <div class="table-head-row">
           <div>
             <h5 class="tbl-title">Position Directory</h5>
             <span class="count-badge">{{ filtered.length }} positions</span>
           </div>
           <button class="btn-icon" @click="positionStore.fetchPositions()">
-            <i class="fas fa-sync-alt"></i>
+            <VsxIcon iconName="Refresh2" :size="18" />
           </button>
         </div>
         <div class="table-responsive">
@@ -51,9 +104,17 @@
             <thead>
               <tr>
                 <th># ID</th>
-                <th>Position Title</th>
-                <th>Department</th>
-                <th>Base Salary</th>
+                <th class="sortable" @click="toggle('title')">
+                  Position Title <VsxIcon :iconName="sortIcon('title')" :size="14" class="sort-ic" />
+                </th>
+                <th class="sortable" @click="toggle('department_name')">
+                  Department
+                  <VsxIcon :iconName="sortIcon('department_name')" :size="14" class="sort-ic" />
+                </th>
+                <th class="sortable" @click="toggle('base_salary')">
+                  Base Salary
+                  <VsxIcon :iconName="sortIcon('base_salary')" :size="14" class="sort-ic" />
+                </th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -67,10 +128,10 @@
               </tr>
               <tr v-else-if="filtered.length === 0">
                 <td colspan="6" class="empty-row">
-                  <i class="fas fa-briefcase fa-2x"></i><br />No positions found
+                  <VsxIcon iconName="Briefcase" :size="28" /><br />No positions found
                 </td>
               </tr>
-              <tr v-for="pos in filtered" :key="pos.id" class="pos-row">
+              <tr v-for="pos in sortedPos" :key="pos.id" class="pos-row">
                 <td>
                   <span class="row-num">#{{ pos.id }}</span>
                 </td>
@@ -79,11 +140,11 @@
                     <div
                       class="pos-icon-wrap"
                       :style="{
-                        background: (pos.dept_color || '#6823ff') + '12',
-                        color: pos.dept_color || '#6823ff',
+                        background: (pos.dept_color || '#4f7cff') + '12',
+                        color: pos.dept_color || '#4f7cff',
                       }"
                     >
-                      <i class="fas fa-briefcase"></i>
+                      <VsxIcon iconName="Briefcase" :size="18" />
                     </div>
                     <div>
                       <div class="pos-title-text">{{ pos.title }}</div>
@@ -96,12 +157,14 @@
                   <span
                     class="code-badge"
                     :style="{
-                      color: pos.dept_color || '#6823ff',
-                      borderColor: (pos.dept_color || '#6823ff') + '30',
-                      background: (pos.dept_color || '#6823ff') + '08',
+                      color: pos.dept_color || '#4f7cff',
+                      borderColor: (pos.dept_color || '#4f7cff') + '30',
+                      background: (pos.dept_color || '#4f7cff') + '08',
                     }"
                   >
-                    <i class="fas fa-building me-1"></i>{{ pos.department_name || 'Unassigned' }}
+                    <VsxIcon iconName="Building" :size="18" class="me-1" />{{
+                      pos.department_name || 'Unassigned'
+                    }}
                   </span>
                 </td>
 
@@ -116,10 +179,10 @@
                 <td>
                   <div class="action-buttons">
                     <button class="btn-icon" @click="openEdit(pos)" title="Edit">
-                      <i class="fas fa-edit"></i>
+                      <VsxIcon iconName="Edit2" :size="18" />
                     </button>
                     <button class="btn-icon danger" @click="confirmDelete(pos)" title="Delete">
-                      <i class="fas fa-trash"></i>
+                      <VsxIcon iconName="Trash" :size="18" />
                     </button>
                   </div>
                 </td>
@@ -134,7 +197,9 @@
       <div class="modal-box">
         <div class="modal-head">
           <h3>{{ editingPos ? 'Edit Position' : 'Add Position' }}</h3>
-          <button class="close-btn" @click="showModal = false"><i class="fas fa-times"></i></button>
+          <button class="close-btn" @click="showModal = false">
+            <VsxIcon iconName="CloseCircle" :size="18" />
+          </button>
         </div>
         <form @submit.prevent="savePos" class="modal-form">
           <div class="form-row">
@@ -187,11 +252,11 @@
         <div class="modal-head">
           <h3>Delete Position</h3>
           <button class="close-btn" @click="showDeleteModal = false">
-            <i class="fas fa-times"></i>
+            <VsxIcon iconName="CloseCircle" :size="18" />
           </button>
         </div>
         <div class="delete-body">
-          <div class="delete-icon-wrap"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="delete-icon-wrap"><VsxIcon iconName="Warning2" :size="18" /></div>
           <p>
             Are you sure you want to delete <strong>{{ deletingPos?.title }}</strong
             >?
@@ -216,11 +281,21 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import MainLayout from '@/components/layouts/MainLayout.vue'
 import { usePositionStore } from '@/stores/position'
 import { useDepartmentStore } from '@/stores/department'
+import { useEmployeeStore } from '@/stores/employee'
+import { useTableSort } from '@/composables/useTableSort'
 import { toast } from 'vue3-toastify'
 
 const positionStore = usePositionStore()
 const deptStore = useDepartmentStore()
+const employeeStore = useEmployeeStore()
 const search = ref('')
+const viewMode = ref('grid')
+
+// How many employees currently hold this position (KPI footer metric).
+const holderCount = (pos) =>
+  (employeeStore.employees || []).filter(
+    (e) => e.position_id === pos.id || e.position_title === pos.title,
+  ).length
 const showModal = ref(false)
 const showDeleteModal = ref(false)
 const editingPos = ref(null)
@@ -234,11 +309,11 @@ const stats = computed(() => {
   const avgSalary = list.length ? Math.round(totalSalary / list.length) : 0
 
   return [
-    { label: 'Total Positions', value: list.length, icon: 'fas fa-briefcase', color: '#6823ff' },
+    { label: 'Total Positions', value: list.length, icon: 'Briefcase', color: '#4f7cff' },
     {
       label: 'Avg Base Salary',
       value: '$' + new Intl.NumberFormat().format(avgSalary),
-      icon: 'fas fa-dollar-sign',
+      icon: 'DollarCircle',
       color: '#16a34a',
     },
   ]
@@ -250,6 +325,8 @@ const filtered = computed(() => {
   const q = search.value.toLowerCase()
   return list.filter((p) => p.title?.toLowerCase().includes(q))
 })
+
+const { toggle, sortIcon, sorted: sortedPos } = useTableSort(filtered, { defaultKey: 'title' })
 
 const formatNum = (n) => new Intl.NumberFormat().format(n || 0)
 
@@ -314,6 +391,7 @@ async function deletePos() {
 onMounted(() => {
   positionStore.fetchPositions()
   deptStore.fetchDepartments()
+  if (!employeeStore.employees?.length) employeeStore.fetchEmployees?.()
 })
 </script>
 
@@ -329,7 +407,7 @@ onMounted(() => {
   background-color: #f8fafc;
   min-height: 100vh;
   font-family:
-    'Inter',
+    'Plus Jakarta Sans',
     system-ui,
     -apple-system,
     sans-serif;
@@ -339,6 +417,174 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
 }
+
+/* Toolbar right + view toggle */
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.view-toggle {
+  display: flex;
+  background: #f1f5f9;
+  padding: 0.25rem;
+  border-radius: 8px;
+}
+.view-btn {
+  width: 34px;
+  height: 34px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.view-btn.active {
+  background: #fff;
+  color: var(--accent, var(--accent));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* KPI position cards */
+.pos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+.kpi-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 1.4rem 1.4rem 1.2rem;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.02);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeUp 0.4s ease both;
+}
+.kpi-card:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px -10px rgba(15, 23, 42, 0.14);
+}
+.kpi-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+.kpi-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.kpi-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.kpi-actions {
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.kpi-card:hover .kpi-actions {
+  opacity: 1;
+}
+.kpi-value {
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #16a34a;
+}
+.kpi-metric-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+.kpi-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0.9rem 0 0;
+}
+.kpi-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed #e2e8f0;
+}
+.code-chip {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 7px;
+}
+.kpi-members {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+.light-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.light-table th.sortable:hover {
+  color: var(--accent);
+}
+.sort-ic {
+  opacity: 0.55;
+  vertical-align: -2px;
+}
+.light-table th.sortable:hover .sort-ic {
+  opacity: 1;
+}
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+.empty-state :deep(svg) {
+  color: #cbd5e1;
+}
+.btn-sm {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.8rem;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .page-title {
   font-size: 1.75rem;
   font-weight: 800;
@@ -351,7 +597,7 @@ onMounted(() => {
   margin: 0;
 }
 .text-gradient {
-  background: linear-gradient(135deg, #6823ff, #0284c7);
+  background: linear-gradient(135deg, var(--accent), #0284c7);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -363,7 +609,7 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: 0.65rem 1.25rem;
-  background: linear-gradient(135deg, #6823ff, #4f0fdb);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   border: none;
   border-radius: 10px;
   color: white;
@@ -371,10 +617,10 @@ onMounted(() => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 14px rgba(104, 35, 255, 0.25);
+  box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.25);
 }
 .btn-primary:hover:not(:disabled) {
-  box-shadow: 0 6px 18px rgba(104, 35, 255, 0.35);
+  box-shadow: 0 6px 18px rgba(var(--accent-rgb), 0.35);
   transform: translateY(-1px);
 }
 .btn-primary:disabled {
@@ -489,9 +735,9 @@ onMounted(() => {
   transition: all 0.2s;
 }
 .search-inp:focus {
-  border-color: #6823ff;
+  border-color: var(--accent);
   background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(104, 35, 255, 0.1);
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.1);
 }
 .search-inp::placeholder {
   color: #94a3b8;
@@ -513,7 +759,7 @@ onMounted(() => {
 }
 .count-badge {
   background: #eef2ff;
-  color: #6823ff;
+  color: var(--accent);
   padding: 3px 10px;
   border-radius: 12px;
   font-size: 0.75rem;
@@ -641,7 +887,7 @@ onMounted(() => {
 }
 .btn-icon:hover {
   background: #eef2ff;
-  color: #6823ff;
+  color: var(--accent);
   border-color: #cbd5e1;
 }
 .btn-icon.danger:hover {
@@ -661,7 +907,7 @@ onMounted(() => {
   width: 28px;
   height: 28px;
   border: 3px solid #e2e8f0;
-  border-top-color: #6823ff;
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin: 0 auto 0.75rem;
@@ -757,8 +1003,8 @@ onMounted(() => {
 }
 .form-field input:focus,
 .form-field select:focus {
-  border-color: #6823ff;
-  box-shadow: 0 0 0 4px rgba(104, 35, 255, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.1);
 }
 .form-field input::placeholder {
   color: #cbd5e1;

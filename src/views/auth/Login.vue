@@ -7,7 +7,7 @@
     <div class="login-wrapper">
       <div class="login-brand">
         <div class="brand-icon">
-          <i class="fas fa-building"></i>
+          <VsxIcon iconName="Building" :size="18" />
         </div>
         <span class="brand-name">HRM System</span>
       </div>
@@ -18,14 +18,14 @@
           <p class="card-subtitle">Sign in to your HRM dashboard</p>
 
           <div v-if="errorMsg" class="error-alert">
-            <i class="fas fa-exclamation-circle"></i> {{ errorMsg }}
+            <VsxIcon iconName="InfoCircle" :size="18" /> {{ errorMsg }}
           </div>
 
           <form @submit.prevent="handleLogin" class="login-form">
             <div class="field-group">
               <label for="email" class="field-label">Email address</label>
               <div class="field-wrapper">
-                <i class="fas fa-envelope field-icon"></i>
+                <VsxIcon iconName="Sms" :size="18" class="field-icon" />
                 <input
                   id="email"
                   type="email"
@@ -44,7 +44,7 @@
                 <a href="#" class="forgot-link">Forgot password?</a>
               </div>
               <div class="field-wrapper">
-                <i class="fas fa-lock field-icon"></i>
+                <VsxIcon iconName="Lock" :size="18" class="field-icon" />
                 <input
                   id="password"
                   :type="showPassword ? 'text' : 'password'"
@@ -55,7 +55,7 @@
                   autocomplete="current-password"
                 />
                 <button type="button" class="toggle-pwd" @click="showPassword = !showPassword">
-                  <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                  <VsxIcon :iconName="showPassword ? 'EyeSlash' : 'Eye'" :size="18" />
                 </button>
               </div>
             </div>
@@ -70,7 +70,7 @@
 
             <button type="submit" class="submit-btn" :disabled="loading">
               <span v-if="loading" class="btn-spinner"></span>
-              <span v-else><i class="fas fa-sign-in-alt me-2"></i></span>
+              <span v-else><VsxIcon iconName="Login" :size="18" class="me-2" /></span>
               {{ loading ? 'Signing in...' : 'Sign In' }}
             </button>
           </form>
@@ -134,7 +134,7 @@ const handleLogin = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   position: relative;
   overflow: hidden;
   padding: 1rem;
@@ -150,7 +150,7 @@ const handleLogin = async () => {
 .orb-1 {
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, #6823ff, transparent);
+  background: radial-gradient(circle, var(--accent), transparent);
   top: -150px;
   left: -150px;
   animation-delay: 0s;
@@ -215,19 +215,19 @@ const handleLogin = async () => {
 .brand-icon {
   width: 44px;
   height: 44px;
-  background: linear-gradient(135deg, #6823ff, #13707f);
+  background: linear-gradient(135deg, var(--accent), #64748b);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.1rem;
   color: white;
-  box-shadow: 0 8px 24px rgba(104, 35, 255, 0.25);
+  box-shadow: 0 8px 24px rgba(var(--accent-rgb), 0.25);
 }
 .brand-name {
   font-size: 1.2rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #531cbd, #11606d);
+  background: linear-gradient(135deg, var(--accent-strong), #475569);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -296,7 +296,7 @@ const handleLogin = async () => {
 }
 .forgot-link {
   font-size: 0.78rem;
-  color: #6823ff;
+  color: var(--accent);
   text-decoration: none;
   font-weight: 500;
   transition: opacity 0.2s;
@@ -326,14 +326,14 @@ const handleLogin = async () => {
   border-radius: 11px;
   color: #1a1a1a;
   font-size: 0.88rem;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   outline: none;
   transition: all 0.2s;
 }
 .field-input:focus {
   background: #ffffff;
-  border-color: #6823ff;
-  box-shadow: 0 0 0 3px rgba(104, 35, 255, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
 }
 .field-input::placeholder {
   color: #94a3b8;
@@ -381,8 +381,8 @@ const handleLogin = async () => {
   transition: all 0.2s;
 }
 .checkbox-label input[type='checkbox']:checked + .checkbox-custom {
-  background: linear-gradient(135deg, #6823ff, #4f0fdb);
-  border-color: #6823ff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-color: var(--accent);
 }
 .checkbox-label input[type='checkbox']:checked + .checkbox-custom::after {
   content: '✓';
@@ -397,7 +397,7 @@ const handleLogin = async () => {
   justify-content: center;
   gap: 8px;
   padding: 0.85rem;
-  background: linear-gradient(135deg, #6823ff, #4f0fdb);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   border: none;
   border-radius: 12px;
   color: white;
@@ -406,14 +406,14 @@ const handleLogin = async () => {
   cursor: pointer;
   letter-spacing: 0.3px;
   transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(104, 35, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.2);
   margin-top: 0.4rem;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 .submit-btn:hover:not(:disabled) {
   opacity: 0.95;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(104, 35, 255, 0.3);
+  box-shadow: 0 6px 20px rgba(var(--accent-rgb), 0.3);
 }
 .submit-btn:active:not(:disabled) {
   transform: translateY(0);

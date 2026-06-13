@@ -105,6 +105,14 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // 💡 បច្ចុប្បន្នភាពព័ត៌មានផ្ទាល់ខ្លួន (រក្សាទុកក្នុង localStorage + ធ្វើបច្ចុប្បន្នភាព reactive)
+  function updateProfile(changes) {
+    const next = { ...(user.value || {}), ...changes }
+    user.value = next
+    localStorage.setItem(STORAGE_USER, JSON.stringify(next))
+    return { success: true }
+  }
+
   function logout() {
     token.value = null
     user.value = null
@@ -131,7 +139,8 @@ export const useAuthStore = defineStore('auth', () => {
     homeRoute,
     login,
     logout,
-    canAccess
+    canAccess,
+    updateProfile,
   }
 })
 

@@ -3,23 +3,25 @@
     <div class="reports-container">
       <div class="page-header">
         <div>
-          <h1 class="page-title"><i class="fas fa-chart-bar me-2 text-gradient"></i>Reports</h1>
+          <h1 class="page-title">
+            <VsxIcon iconName="Chart2" :size="18" class="me-2 text-gradient" />Reports
+          </h1>
           <p class="page-sub">Analyze your organization's performance and data</p>
         </div>
-        <div class="header-date"><i class="fas fa-calendar-alt"></i> {{ currentDate }}</div>
+        <div class="header-date"><VsxIcon iconName="Calendar" :size="18" /> {{ currentDate }}</div>
       </div>
 
       <div class="quick-stats">
         <div class="qs-card" v-for="s in quickStats" :key="s.label">
           <div class="qs-icon" :style="{ background: s.color + '12', color: s.color }">
-            <i :class="s.icon"></i>
+            <VsxIcon :iconName="s.icon" :size="22" />
           </div>
           <div class="qs-info">
             <div class="qs-value">{{ s.value }}</div>
             <div class="qs-label">{{ s.label }}</div>
           </div>
           <div class="qs-trend" :class="s.trend > 0 ? 'up' : 'down'">
-            <i :class="s.trend > 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down'"></i>
+            <VsxIcon :iconName="s.trend > 0 ? 'ArrowUp' : 'ArrowDown'" :size="16" />
             {{ Math.abs(s.trend) }}%
           </div>
         </div>
@@ -33,22 +35,22 @@
           @click="goToReport(report)"
         >
           <div class="report-icon-wrap" :style="{ background: report.color + '12' }">
-            <i :class="report.icon" :style="{ color: report.color }"></i>
+            <VsxIcon :iconName="report.icon" :size="20" :style="{ color: report.color }" />
           </div>
           <div class="report-body">
             <h3 class="report-title">{{ report.title }}</h3>
             <p class="report-desc">{{ report.description }}</p>
             <div class="report-meta">
               <span class="meta-chip"
-                ><i class="fas fa-chart-bar"></i> {{ report.charts }} charts</span
+                ><VsxIcon iconName="Chart2" :size="18" /> {{ report.charts }} charts</span
               >
               <span class="meta-chip"
-                ><i class="fas fa-table"></i> {{ report.metrics }} metrics</span
+                ><VsxIcon iconName="RowVertical" :size="18" /> {{ report.metrics }} metrics</span
               >
             </div>
           </div>
           <div class="report-arrow">
-            <i class="fas fa-arrow-right"></i>
+            <VsxIcon iconName="ArrowRight" :size="18" />
           </div>
         </div>
       </div>
@@ -93,19 +95,19 @@ const currentDate = new Date().toLocaleDateString('en-US', {
 })
 
 const quickStats = [
-  { label: 'Total Employees', value: '156', icon: 'fas fa-users', color: '#6823ff', trend: 12 },
-  { label: 'Attendance Rate', value: '94.2%', icon: 'fas fa-clock', color: '#16a34a', trend: 2.1 },
+  { label: 'Total Employees', value: '156', icon: 'Profile2User', color: '#4f7cff', trend: 12 },
+  { label: 'Attendance Rate', value: '94.2%', icon: 'Clock', color: '#16a34a', trend: 2.1 },
   {
     label: 'Leave Utilization',
     value: '38%',
-    icon: 'fas fa-calendar-alt',
+    icon: 'Calendar',
     color: '#d97706',
     trend: -5,
   },
   {
     label: 'Monthly Payroll',
     value: '$71.4K',
-    icon: 'fas fa-dollar-sign',
+    icon: 'DollarCircle',
     color: '#0284c7',
     trend: 8,
   },
@@ -115,8 +117,8 @@ const reportCards = [
   {
     title: 'Headcount Report',
     description: 'Analyze workforce distribution by department, position, and employment type',
-    icon: 'fas fa-users',
-    color: '#6823ff',
+    icon: 'Profile2User',
+    color: '#4f7cff',
     charts: 4,
     metrics: 12,
     route: '/reports/headcount',
@@ -124,7 +126,7 @@ const reportCards = [
   {
     title: 'Attendance Report',
     description: 'Track attendance rates, late arrivals, absenteeism, and trends over time',
-    icon: 'fas fa-clock',
+    icon: 'Clock',
     color: '#16a34a',
     charts: 3,
     metrics: 8,
@@ -133,7 +135,7 @@ const reportCards = [
   {
     title: 'Leave Report',
     description: 'Monitor leave balances, utilization rates, and leave type breakdown',
-    icon: 'fas fa-calendar-alt',
+    icon: 'Calendar',
     color: '#d97706',
     charts: 2,
     metrics: 6,
@@ -142,8 +144,8 @@ const reportCards = [
   {
     title: 'Payroll Report',
     description: 'Comprehensive payroll analysis including salary ranges, costs by department',
-    icon: 'fas fa-money-bill-wave',
-    color: '#7c3aed',
+    icon: 'Moneys',
+    color: '#4f7cff',
     charts: 5,
     metrics: 14,
     route: '/reports/payroll',
@@ -151,7 +153,7 @@ const reportCards = [
   {
     title: 'Turnover Report',
     description: 'Track employee turnover rates, retention trends, and exit analysis',
-    icon: 'fas fa-door-open',
+    icon: 'Login',
     color: '#dc2626',
     charts: 3,
     metrics: 7,
@@ -160,7 +162,7 @@ const reportCards = [
   {
     title: 'Performance Report',
     description: 'Review employee performance metrics, KPI achievements, and reviews',
-    icon: 'fas fa-star',
+    icon: 'Star1',
     color: '#b45309',
     charts: 4,
     metrics: 10,
@@ -187,7 +189,9 @@ onMounted(async () => {
     ? headcount.map((r) => Number(r.employeeCount) || 0)
     : [24, 8, 12, 15, 20, 18]
 
-  const payLabels = payroll.length ? payroll.map((r) => r.month) : ['Jan', 'Feb', 'Mar', 'Apr', 'May']
+  const payLabels = payroll.length
+    ? payroll.map((r) => r.month)
+    : ['Jan', 'Feb', 'Mar', 'Apr', 'May']
   const payData = payroll.length
     ? payroll.map((r) => Number(r.total_expenditure) || 0)
     : [65000, 67200, 68400, 70100, 71400]
@@ -202,7 +206,7 @@ onMounted(async () => {
           {
             label: 'Employees',
             data: deptData,
-            backgroundColor: ['#6823ff', '#0284c7', '#d97706', '#dc2626', '#16a34a', '#7c3aed'],
+            backgroundColor: ['#4f7cff', '#0284c7', '#d97706', '#dc2626', '#16a34a', '#4f7cff'],
             borderRadius: 6,
             borderSkipped: false,
           },
@@ -236,12 +240,12 @@ onMounted(async () => {
           {
             label: 'Net Payroll ($)',
             data: payData,
-            borderColor: '#6823ff',
-            backgroundColor: 'rgba(104,35,255,0.05)',
+            borderColor: '#4f7cff',
+            backgroundColor: 'rgba(79, 124, 255,0.05)',
             tension: 0.35,
             fill: true,
             borderWidth: 2.5,
-            pointBackgroundColor: '#6823ff',
+            pointBackgroundColor: '#4f7cff',
             pointRadius: 4,
           },
         ],
@@ -283,7 +287,7 @@ onMounted(async () => {
   background-color: #f8fafc;
   min-height: 100vh;
   font-family:
-    'Inter',
+    'Plus Jakarta Sans',
     system-ui,
     -apple-system,
     sans-serif;
@@ -305,7 +309,7 @@ onMounted(async () => {
   margin: 0;
 }
 .text-gradient {
-  background: linear-gradient(135deg, #6823ff, #0284c7);
+  background: linear-gradient(135deg, var(--accent), #0284c7);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -462,7 +466,7 @@ onMounted(async () => {
   flex-shrink: 0;
 }
 .report-card:hover .report-arrow {
-  color: #6823ff;
+  color: var(--accent);
   transform: translateX(4px);
 }
 

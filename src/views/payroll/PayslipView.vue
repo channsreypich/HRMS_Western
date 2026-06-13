@@ -3,15 +3,17 @@
     <div class="payslip-container" v-if="record">
       <div class="page-header">
         <div>
-          <h1 class="page-title"><i class="fas fa-file-invoice me-2 text-gradient"></i>Payslip</h1>
+          <h1 class="page-title">
+            <VsxIcon iconName="ReceiptText" :size="18" class="me-2 text-gradient" />Payslip
+          </h1>
           <p class="page-sub">{{ record.first_name }} {{ record.last_name }} · {{ monthLabel }}</p>
         </div>
         <div class="header-actions">
           <button class="btn-outline" @click="$router.back()">
-            <i class="fas fa-arrow-left"></i> Back
+            <VsxIcon iconName="ArrowLeft" :size="18" /> Back
           </button>
           <button class="btn-primary" @click="printPayslip">
-            <i class="fas fa-print"></i> Print
+            <VsxIcon iconName="Printer" :size="18" /> Print
           </button>
         </div>
       </div>
@@ -20,7 +22,7 @@
         <div class="doc-header">
           <div class="company-info">
             <div class="company-logo">
-              <i class="fas fa-building"></i>
+              <VsxIcon iconName="Building" :size="18" />
             </div>
             <div>
               <div class="company-name">HRM System Company</div>
@@ -68,7 +70,9 @@
 
         <div class="pay-columns">
           <div class="pay-col">
-            <div class="col-title earnings-title"><i class="fas fa-arrow-up"></i> Earnings</div>
+            <div class="col-title earnings-title">
+              <VsxIcon iconName="ArrowUp" :size="18" /> Earnings
+            </div>
             <div class="pay-row-item" v-for="e in earnings" :key="e.label">
               <span class="item-label">{{ e.label }}</span>
               <span class="item-amount green">${{ formatNum(e.amount) }}</span>
@@ -81,7 +85,7 @@
 
           <div class="pay-col">
             <div class="col-title deductions-title">
-              <i class="fas fa-arrow-down"></i> Deductions
+              <VsxIcon iconName="ArrowDown" :size="18" /> Deductions
             </div>
             <div class="pay-row-item" v-for="d in deductions" :key="d.label">
               <span class="item-label">{{ d.label }}</span>
@@ -110,7 +114,7 @@
         </div>
 
         <div class="doc-footer-note">
-          <i class="fas fa-info-circle"></i>
+          <VsxIcon iconName="InfoCircle" :size="18" />
           This payslip is system-generated and does not require a signature. For any queries,
           contact the HR department.
         </div>
@@ -118,7 +122,7 @@
     </div>
 
     <div v-else class="light-card not-found">
-      <i class="fas fa-file-excel fa-3x"></i>
+      <VsxIcon iconName="DocumentText" :size="44" />
       <p>Payslip record not found</p>
       <button class="btn-outline" @click="$router.back()">Go Back</button>
     </div>
@@ -173,7 +177,7 @@ const printPayslip = () => {
   const el = document.getElementById('payslip-print')
   const w = window.open('', '_blank')
   w.document.write(
-    `<html><head><title>Payslip - HRM</title><style>body{font-family:sans-serif;padding:2rem;color:#0f172a;background:#fff;} .payslip-doc{max-width:800px;margin:0 auto;border:1px solid #e2e8f0;padding:2.5rem;border-radius:16px;} .company-info { display: flex; gap: 15px; align-items: center; } .doc-header { display: flex; justify-content: space-between; align-items: flex-start; } .company-name { font-weight: 800; font-size: 1.1rem; color: #0f172a; } .company-address { color: #64748b; font-size: 12px; } .payslip-label { font-size: 1.4rem; font-weight: 900; letter-spacing: 2px; color: #6823ff; } .payslip-month { color: #334155; font-size: 14px; margin-top: 4px; } .payslip-id { font-size: 12px; color: #94a3b8; font-family: monospace; } .doc-divider { border-bottom: 1px solid #e2e8f0; margin: 24px 0; } .emp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; } .field-label { font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight:600; } .field-value { font-size: 14px; color: #1e293b; font-weight: 700; margin-top:2px; } .pay-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin: 24px 0; } .col-title { font-weight: 800; font-size: 12px; text-transform: uppercase; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid #f1f5f9; display: flex; align-items: center; gap: 6px; } .earnings-title { color: #16a34a; } .deductions-title { color: #dc2626; } .pay-row-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; color: #475569; } .item-amount { font-family: monospace; font-weight: 600; } .item-amount.green { color: #16a34a; } .item-amount.red { color: #dc2626; } .col-total { display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; color: #0f172a; margin-top: 16px; padding-top: 12px; border-top: 1px dashed #cbd5e1; } .total-val { font-family: monospace; } .total-val.green { color: #16a34a; } .total-val.red { color: #dc2626; } .net-pay-banner { background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-top: 24px; } .net-label { font-size: 12px; font-weight: 800; color: #64748b; } .net-amount { font-size: 28px; font-weight: 900; color: #6823ff; font-family: monospace; } .net-status { text-align: right; } .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; } .s-paid { background: #dcfce7; color: #16a34a; } .s-pending { background: #fef3c7; color: #d97706; } .paid-on { font-size: 11px; color: #94a3b8; display: block; margin-top: 4px; } .doc-footer-note { font-size: 12px; color: #94a3b8; margin-top: 24px; text-align: center; border-top: 1px dashed #e2e8f0; padding-top: 16px; }</style></head><body><div class="payslip-doc">${el.innerHTML}</div></body></html>`,
+    `<html><head><title>Payslip - HRM</title><style>body{font-family:sans-serif;padding:2rem;color:#0f172a;background:#fff;} .payslip-doc{max-width:800px;margin:0 auto;border:1px solid #e2e8f0;padding:2.5rem;border-radius:16px;} .company-info { display: flex; gap: 15px; align-items: center; } .doc-header { display: flex; justify-content: space-between; align-items: flex-start; } .company-name { font-weight: 800; font-size: 1.1rem; color: #0f172a; } .company-address { color: #64748b; font-size: 12px; } .payslip-label { font-size: 1.4rem; font-weight: 900; letter-spacing: 2px; color: var(--accent); } .payslip-month { color: #334155; font-size: 14px; margin-top: 4px; } .payslip-id { font-size: 12px; color: #94a3b8; font-family: monospace; } .doc-divider { border-bottom: 1px solid #e2e8f0; margin: 24px 0; } .emp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; } .field-label { font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight:600; } .field-value { font-size: 14px; color: #1e293b; font-weight: 700; margin-top:2px; } .pay-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin: 24px 0; } .col-title { font-weight: 800; font-size: 12px; text-transform: uppercase; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid #f1f5f9; display: flex; align-items: center; gap: 6px; } .earnings-title { color: #16a34a; } .deductions-title { color: #dc2626; } .pay-row-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; color: #475569; } .item-amount { font-family: monospace; font-weight: 600; } .item-amount.green { color: #16a34a; } .item-amount.red { color: #dc2626; } .col-total { display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; color: #0f172a; margin-top: 16px; padding-top: 12px; border-top: 1px dashed #cbd5e1; } .total-val { font-family: monospace; } .total-val.green { color: #16a34a; } .total-val.red { color: #dc2626; } .net-pay-banner { background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-top: 24px; } .net-label { font-size: 12px; font-weight: 800; color: #64748b; } .net-amount { font-size: 28px; font-weight: 900; color: var(--accent); font-family: monospace; } .net-status { text-align: right; } .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; } .s-paid { background: #dcfce7; color: #16a34a; } .s-pending { background: #fef3c7; color: #d97706; } .paid-on { font-size: 11px; color: #94a3b8; display: block; margin-top: 4px; } .doc-footer-note { font-size: 12px; color: #94a3b8; margin-top: 24px; text-align: center; border-top: 1px dashed #e2e8f0; padding-top: 16px; }</style></head><body><div class="payslip-doc">${el.innerHTML}</div></body></html>`,
   )
   w.document.close()
   setTimeout(() => {
@@ -199,7 +203,7 @@ onMounted(async () => {
   background-color: #f8fafc;
   min-height: 100vh;
   font-family:
-    'Inter',
+    'Plus Jakarta Sans',
     system-ui,
     -apple-system,
     sans-serif;
@@ -222,7 +226,7 @@ onMounted(async () => {
   margin: 0;
 }
 .text-gradient {
-  background: linear-gradient(135deg, #6823ff, #0284c7);
+  background: linear-gradient(135deg, var(--accent), #0284c7);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -238,7 +242,7 @@ onMounted(async () => {
   align-items: center;
   gap: 8px;
   padding: 0.65rem 1.25rem;
-  background: linear-gradient(135deg, #6823ff, #4f0fdb);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   border: none;
   border-radius: 10px;
   color: white;
@@ -246,10 +250,10 @@ onMounted(async () => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 14px rgba(104, 35, 255, 0.25);
+  box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.25);
 }
 .btn-primary:hover {
-  box-shadow: 0 6px 18px rgba(104, 35, 255, 0.35);
+  box-shadow: 0 6px 18px rgba(var(--accent-rgb), 0.35);
   transform: translateY(-1px);
 }
 
@@ -299,7 +303,7 @@ onMounted(async () => {
 .company-logo {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #6823ff, #4f0fdb);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -326,7 +330,7 @@ onMounted(async () => {
   font-size: 1.4rem;
   font-weight: 900;
   letter-spacing: 2px;
-  color: #6823ff;
+  color: var(--accent);
 }
 .payslip-month {
   font-size: 0.875rem;
@@ -471,7 +475,7 @@ onMounted(async () => {
 .net-amount {
   font-size: 2.25rem;
   font-weight: 900;
-  color: #6823ff;
+  color: var(--accent);
   font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
 }
 .net-status {
@@ -513,7 +517,7 @@ onMounted(async () => {
   font-weight: 500;
   line-height: 1.4;
 }
-.doc-footer-note i {
+.doc-footer-note :deep(svg) {
   flex-shrink: 0;
   margin-top: 2px;
   color: #cbd5e1;
@@ -537,7 +541,7 @@ onMounted(async () => {
   margin: 4rem auto;
   box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.02);
 }
-.not-found i {
+.not-found :deep(svg) {
   color: #cbd5e1;
 }
 .me-2 {

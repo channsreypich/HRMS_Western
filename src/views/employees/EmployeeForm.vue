@@ -5,7 +5,7 @@
         <div class="header-content">
           <div>
             <h1 class="page-title">
-              <i class="fas fa-user-edit me-2" style="color: #6823ff"></i>
+              <VsxIcon iconName="UserEdit" :size="18" class="me-2" style="color: var(--accent)" />
               <span class="text-gradient">{{ isEdit ? 'Edit Employee' : 'Add New Employee' }}</span>
             </h1>
             <p class="page-subtitle">
@@ -14,10 +14,12 @@
           </div>
           <div class="header-actions">
             <button class="btn-ghost" @click="cancelForm">
-              <i class="fas fa-times me-2"></i>Cancel
+              <VsxIcon iconName="CloseCircle" :size="18" class="me-2" />Cancel
             </button>
             <button class="btn-primary" @click="saveEmployee" :disabled="saving">
-              <i class="fas fa-save me-2"></i>{{ saving ? 'Saving...' : 'Save Employee' }}
+              <VsxIcon iconName="Save2" :size="18" class="me-2" />{{
+                saving ? 'Saving...' : 'Save Employee'
+              }}
             </button>
           </div>
         </div>
@@ -32,8 +34,8 @@
           @click="goToStep(index)"
         >
           <div class="step-circle">
-            <i v-if="currentStep > index" class="fas fa-check"></i>
-            <i v-else :class="step.icon"></i>
+            <VsxIcon iconName="TickCircle" :size="18" v-if="currentStep > index" />
+            <VsxIcon :iconName="step.icon" :size="18" v-else />
           </div>
           <div class="step-info" v-if="!isMobile">
             <span class="step-label">{{ step.label }}</span>
@@ -46,7 +48,8 @@
       <div class="light-card form-content fade-in" style="animation-delay: 0.12s">
         <div v-show="currentStep === 0" class="form-step">
           <h3 class="step-title">
-            <i class="fas fa-user me-2" style="color: #6823ff"></i>Personal Information
+            <VsxIcon iconName="User" :size="18" class="me-2" style="color: var(--accent)" />Personal
+            Information
           </h3>
           <div class="form-grid">
             <div class="form-group">
@@ -104,7 +107,9 @@
                 type="text"
                 class="light-input"
                 v-model="form.password"
-                :placeholder="isEdit ? 'Leave blank to keep current password' : 'Set a login password'"
+                :placeholder="
+                  isEdit ? 'Leave blank to keep current password' : 'Set a login password'
+                "
                 :class="{ 'is-invalid': errors.password }"
               />
               <span class="err-msg" v-if="errors.password">{{ errors.password }}</span>
@@ -117,7 +122,12 @@
 
         <div v-show="currentStep === 1" class="form-step">
           <h3 class="step-title">
-            <i class="fas fa-briefcase me-2" style="color: #06b6d4"></i>Employment Details
+            <VsxIcon
+              iconName="Briefcase"
+              :size="18"
+              class="me-2"
+              style="color: #06b6d4"
+            />Employment Details
           </h3>
           <div class="form-grid">
             <div class="form-group">
@@ -176,10 +186,11 @@
 
         <div v-show="currentStep === 2" class="form-step">
           <h3 class="step-title">
-            <i class="fas fa-money-bill me-2" style="color: #059669"></i>Compensation Info
+            <VsxIcon iconName="Money" :size="18" class="me-2" style="color: #059669" />Compensation
+            Info
           </h3>
           <div class="info-alert">
-            <i class="fas fa-info-circle me-2"></i>
+            <VsxIcon iconName="InfoCircle" :size="18" class="me-2" />
             <span
               >Set the employee's monthly <strong>base salary</strong>. It is saved straight to the
               database and used to generate payroll.</span
@@ -219,7 +230,12 @@
 
         <div v-show="currentStep === 3" class="form-step">
           <h3 class="step-title">
-            <i class="fas fa-file-alt me-2" style="color: #b45309"></i>Verification Documents
+            <VsxIcon
+              iconName="DocumentText"
+              :size="18"
+              class="me-2"
+              style="color: #b45309"
+            />Verification Documents
           </h3>
           <div
             class="upload-zone"
@@ -227,7 +243,7 @@
             @dragover.prevent
             @drop.prevent="handleFileDrop"
           >
-            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+            <div class="upload-icon"><VsxIcon iconName="CloudPlus" :size="40" /></div>
             <p class="upload-text">Drag & drop files here or click to upload</p>
             <p class="upload-sub">Supported: PDF, JPG, PNG (Max 5MB)</p>
             <input
@@ -241,11 +257,11 @@
           </div>
           <div class="uploaded-files" v-if="documentsList.length">
             <div v-for="(file, index) in documentsList" :key="index" class="file-row">
-              <i :class="getFileIcon(file.type)" class="file-icon"></i>
+              <VsxIcon :iconName="getFileIcon(file.type)" :size="20" class="file-icon" />
               <span class="file-name">{{ file.name }}</span>
               <span class="file-size">{{ formatFileSize(file.size) }}</span>
               <button class="btn-icon danger" @click="removeFile(index)">
-                <i class="fas fa-times"></i>
+                <VsxIcon iconName="CloseCircle" :size="18" />
               </button>
             </div>
           </div>
@@ -253,14 +269,16 @@
 
         <div class="form-nav">
           <button class="btn-ghost" @click="previousStep" :disabled="currentStep === 0">
-            <i class="fas fa-chevron-left me-2"></i>Previous
+            <VsxIcon iconName="ArrowLeft2" :size="18" class="me-2" />Previous
           </button>
           <div class="step-indicator">Step {{ currentStep + 1 }} of {{ steps.length }}</div>
           <button v-if="currentStep < steps.length - 1" class="btn-primary" @click="nextStep">
-            Next <i class="fas fa-chevron-right ms-2"></i>
+            Next <VsxIcon iconName="ArrowRight2" :size="18" class="ms-2" />
           </button>
           <button v-else class="btn-success" @click="saveEmployee" :disabled="saving">
-            <i class="fas fa-check me-2"></i>{{ saving ? 'Saving...' : 'Submit' }}
+            <VsxIcon iconName="TickCircle" :size="18" class="me-2" />{{
+              saving ? 'Saving...' : 'Submit'
+            }}
           </button>
         </div>
       </div>
@@ -308,10 +326,10 @@ const form = reactive({
 })
 
 const steps = [
-  { label: 'Personal Info', description: 'Basic information', icon: 'fas fa-user' },
-  { label: 'Employment', description: 'Job details', icon: 'fas fa-briefcase' },
-  { label: 'Compensation', description: 'Salary synced', icon: 'fas fa-money-bill' },
-  { label: 'Documents', description: 'Verification docs', icon: 'fas fa-file-alt' },
+  { label: 'Personal Info', description: 'Basic information', icon: 'User' },
+  { label: 'Employment', description: 'Job details', icon: 'Briefcase' },
+  { label: 'Compensation', description: 'Salary synced', icon: 'Money' },
+  { label: 'Documents', description: 'Verification docs', icon: 'DocumentText' },
 ]
 
 const errors = ref({})
@@ -373,70 +391,71 @@ const goToStep = (step) => {
   if (step < currentStep.value || validateStep(currentStep.value)) currentStep.value = step
 }
 
-  const saveEmployee = async () => {
-    // 1. Validation Logic
-    for (let i = 0; i <= currentStep.value; i++) {
-      if (!validateStep(i)) {
-        currentStep.value = i
-        toast.error('Please fill in all required fields')
-        return
-      }
+const saveEmployee = async () => {
+  // 1. Validation Logic
+  for (let i = 0; i <= currentStep.value; i++) {
+    if (!validateStep(i)) {
+      currentStep.value = i
+      toast.error('Please fill in all required fields')
+      return
+    }
+  }
+
+  saving.value = true
+
+  // 2. Map form to backend DTO structure (role_id omitted -> backend defaults to EMPLOYEE)
+  const payload = {
+    first_name: form.first_name,
+    last_name: form.last_name,
+    email: form.email,
+    phone: form.phone,
+    hire_date: form.hire_date,
+    department_id: form.department_id,
+    position_id: form.position_id,
+    status: form.status,
+    // Always send salary so an edit never accidentally blanks it on the backend
+    base_salary: form.base_salary === '' || form.base_salary == null ? 0 : Number(form.base_salary),
+    username: form.email.split('@')[0],
+  }
+  // Only send a password when set: required on create, optional on edit (blank = keep current)
+  if (form.password) payload.password = form.password
+  if (form.role_id) payload.role_id = form.role_id
+
+  try {
+    let employeeId = route.params.id
+    if (isEdit.value) {
+      const res = await employeeStore.updateEmployee(route.params.id, payload)
+      if (!res.success) throw new Error(res.error || 'Failed to update employee')
+    } else {
+      const res = await employeeStore.createEmployee(payload)
+      if (!res.success) throw new Error(res.error || 'Failed to create employee')
+      employeeId = res.data?.id
     }
 
-    saving.value = true
-
-    // 2. Map form to backend DTO structure (role_id omitted -> backend defaults to EMPLOYEE)
-    const payload = {
-      first_name: form.first_name,
-      last_name: form.last_name,
-      email: form.email,
-      phone: form.phone,
-      hire_date: form.hire_date,
-      department_id: form.department_id,
-      position_id: form.position_id,
-      status: form.status,
-      // Always send salary so an edit never accidentally blanks it on the backend
-      base_salary:
-        form.base_salary === '' || form.base_salary == null ? 0 : Number(form.base_salary),
-      username: form.email.split('@')[0],
+    // 3. Upload any attached documents for this employee
+    const newFiles = documentsList.value.filter((d) => d.file)
+    if (employeeId && newFiles.length) {
+      await Promise.all(
+        newFiles.map((d) => {
+          const fd = new FormData()
+          fd.append('file', d.file)
+          return api.post(`/api/documents/upload/${employeeId}`, fd, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          })
+        }),
+      )
     }
-    // Only send a password when set: required on create, optional on edit (blank = keep current)
-    if (form.password) payload.password = form.password
-    if (form.role_id) payload.role_id = form.role_id
 
-    try {
-      let employeeId = route.params.id
-      if (isEdit.value) {
-        const res = await employeeStore.updateEmployee(route.params.id, payload)
-        if (!res.success) throw new Error(res.error || 'Failed to update employee')
-      } else {
-        const res = await employeeStore.createEmployee(payload)
-        if (!res.success) throw new Error(res.error || 'Failed to create employee')
-        employeeId = res.data?.id
-      }
-
-      // 3. Upload any attached documents for this employee
-      const newFiles = documentsList.value.filter((d) => d.file)
-      if (employeeId && newFiles.length) {
-        await Promise.all(
-          newFiles.map((d) => {
-            const fd = new FormData()
-            fd.append('file', d.file)
-            return api.post(`/api/documents/upload/${employeeId}`, fd, {
-              headers: { 'Content-Type': 'multipart/form-data' },
-            })
-          }),
-        )
-      }
-
-      toast.success(isEdit.value ? 'Employee updated successfully' : 'Employee created successfully')
-      router.push('/employees')
-    } catch (error) {
-      console.error('Submission Error:', error)
-      toast.error(error.response?.data?.message || error.message || 'Failed to sync data with database')
-    } finally {
-      saving.value = false
-    }
+    toast.success(isEdit.value ? 'Employee updated successfully' : 'Employee created successfully')
+    router.push('/employees')
+  } catch (error) {
+    console.error('Submission Error:', error)
+    toast.error(
+      error.response?.data?.message || error.message || 'Failed to sync data with database',
+    )
+  } finally {
+    saving.value = false
+  }
 }
 
 const cancelForm = () => {
@@ -467,9 +486,9 @@ const removeFile = (index) => {
   documentsList.value.splice(index, 1)
 }
 const getFileIcon = (type) => {
-  if (type.includes('pdf')) return 'fas fa-file-pdf'
-  if (type.includes('image')) return 'fas fa-file-image'
-  return 'fas fa-file'
+  if (type.includes('pdf')) return 'DocumentText'
+  if (type.includes('image')) return 'Gallery'
+  return 'Document'
 }
 const formatFileSize = (bytes) => {
   if (bytes === 0) return '0 Bytes'
@@ -552,7 +571,7 @@ onMounted(async () => {
   margin-bottom: 0.3rem;
 }
 .text-gradient {
-  background: linear-gradient(135deg, #531cbd, #11606d);
+  background: linear-gradient(135deg, var(--accent-strong), #475569);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -597,10 +616,10 @@ onMounted(async () => {
   z-index: 1;
 }
 .step-item.active .step-circle {
-  border-color: #6823ff;
-  color: #6823ff;
-  background: rgba(104, 35, 255, 0.08);
-  box-shadow: 0 0 14px rgba(104, 35, 255, 0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.08);
+  box-shadow: 0 0 14px rgba(var(--accent-rgb), 0.15);
 }
 .step-item.completed .step-circle {
   border-color: #059669;
@@ -621,7 +640,7 @@ onMounted(async () => {
   color: #94a3b8;
 }
 .step-item.active .step-label {
-  color: #6823ff;
+  color: var(--accent);
 }
 .step-item.completed .step-label {
   color: #059669;
@@ -692,8 +711,8 @@ onMounted(async () => {
 }
 .light-input:focus,
 .light-select:focus {
-  border-color: #6823ff;
-  box-shadow: 0 0 0 3px rgba(104, 35, 255, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
 }
 .light-input.is-invalid,
 .light-select.is-invalid {
@@ -733,8 +752,8 @@ onMounted(async () => {
   transition: all 0.2s;
 }
 .salary-wrap:focus-within {
-  border-color: #6823ff;
-  box-shadow: 0 0 0 3px rgba(104, 35, 255, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
 }
 .salary-wrap.is-invalid {
   border-color: #dc2626;
@@ -768,8 +787,8 @@ onMounted(async () => {
   transition: all 0.2s;
 }
 .upload-zone:hover {
-  border-color: #6823ff;
-  background: rgba(104, 35, 255, 0.03);
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.03);
 }
 .upload-icon {
   font-size: 2.5rem;
@@ -806,7 +825,7 @@ onMounted(async () => {
   border-radius: 10px;
 }
 .file-icon {
-  color: #6823ff;
+  color: var(--accent);
   font-size: 1rem;
 }
 .file-name {
@@ -843,7 +862,7 @@ onMounted(async () => {
   align-items: center;
   gap: 7px;
   padding: 0.6rem 1.2rem;
-  background: linear-gradient(135deg, #6823ff, #4f0fdb);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   border: none;
   border-radius: 10px;
   color: white;
@@ -853,7 +872,7 @@ onMounted(async () => {
   transition:
     opacity 0.2s,
     transform 0.1s;
-  box-shadow: 0 4px 14px rgba(104, 35, 255, 0.2);
+  box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.2);
 }
 .btn-primary:hover:not(:disabled) {
   opacity: 0.95;
@@ -923,9 +942,9 @@ onMounted(async () => {
   flex-shrink: 0;
 }
 .btn-icon:hover {
-  background: rgba(104, 35, 255, 0.08);
-  color: #6823ff;
-  border-color: rgba(104, 35, 255, 0.2);
+  background: rgba(var(--accent-rgb), 0.08);
+  color: var(--accent);
+  border-color: rgba(var(--accent-rgb), 0.2);
 }
 .btn-icon.danger:hover {
   background: #fee2e2;
